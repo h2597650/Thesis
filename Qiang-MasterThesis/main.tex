@@ -13,6 +13,7 @@
 \usepackage{amsfonts}
 \usepackage{algorithm}
 \usepackage{algorithmic}
+\usepackage{amsmath}
 %\usepackage[margin=1.1in]{geometry}
 
 \graphicspath{{figures/}}
@@ -22,6 +23,9 @@
 \definecolor{bkcolor2}{gray}{0.85}
 \newcommand{\bkcommand}[1]{\colorbox{bkcolor1}{$\mathtt{\backslash}$\texttt{#1}}}
 \newcommand{\textgraph}[1]{\raisebox{-1ex}{\includegraphics[width=1.5em]{#1}}}
+
+\renewcommand{\algorithmicrequire}{\textbf{Input:}} 
+\renewcommand{\algorithmicensure}{\textbf{Output:}}
 
 \begin{document}
 \ICTfrontmatter
@@ -34,6 +38,6 @@
 %\include{chapters/summary}
 \ICTbackmatter{\bibliography{bib/ref}\nocite{*}}
 %\bibliography{bib/ref}
-\include{chapters/thanks}
-\include{chapters/resume}
+%\include{chapters/thanks}
+%\include{chapters/resume}
 \end{document}
