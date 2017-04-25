@@ -37,11 +37,11 @@ $E$是网络中的关注或者粉丝关系，每条边也会有权值，权值�
 
 
 \subsection{独立级联模型}
-\begin{figure}[h]
-	\centering
-	\includegraphics[width=\textwidth]{independent_cascade.png}
-	\caption{独立级联模型示意}\label{fig:independent_cascade}
-\end{figure}
+%\begin{figure}[h]
+%	\centering
+%	\includegraphics[width=\textwidth]{independent_cascade.png}
+%	\caption{独立级联模型示意}\label{fig:independent_cascade}
+%\end{figure}
 独立级联模型（Independent Cascade Model）在03年被Kempe等人\cite{Kempe2003maximizing}提出，
 在独立级联模型中，每条有向边$(u,v) \in E$都有一个概率值$p(u,v) \in [0,1]$代表着$v$被$u$影响的概率。
 传播是随着离散时间片$t$增加而扩散的，定义$S_t$为到时间片$t$时刻为止被激活的节点的集合，定义$S_{-1}=\emptyset$。
@@ -127,31 +127,56 @@ $f(S \cup \{u\}) - f(S) \geq f(T \cup \{u\}) - f(T)$，
 次模性质本质上是边际效益递减，同样加入一个元素$u$，$f(T)$函数值的提升不如$f(S)$的提升大。
 如果对于输入$S \subseteq T \subseteq V$，$f$函数还满足$f(S) \leq f(T)$，则称函数$f$是单调非减的。
 对于单调非减和次模的函数$f$，贪心算法可以做到$1-\frac{1}{e}$的近似比。
+对于影响力最大化问题，由于影响力函数$\sigma(\cdot)$是单调和次模的，可以调用贪心算法解决。
+然而每一步$\sigma(S)$的计算是$\#$P-Hard的，不能精确求解。
+通常采用蒙特卡洛模拟方法来估算影响力，随机模拟10000次传播过程，取被激活节点个数的期望作为影响力。
+由于蒙特卡罗模拟是近似得到影响力大小，贪心算法最后可以取得$1-\frac{1}{e}-\varepsilon$的近似比。
+蒙特卡洛贪心算法执行过程如Algorithm \ref{alg:submodular_greed}所示。
+
+%\begin{algorithm}
+%	\caption{\textbf{MC-Greedy(G,k)}:Monte Carlo greedy algorithm for influence maximization.}
+%	\label{alg:mc_greed} 
+%	\begin{algorithmic}[1]
+%		\REQUIRE $G$: social graph of IC or LT model, $k$: budget of seeds.
+%		\ENSURE selected seed set $S$.
+%		\STATE Initialize $S = \emptyset$
+%		\FOR {$i=1$ to $k$}
+%			\STATE $v = \mathrm{argmax}_{u \in V \setminus S}$ {MC-Spread}{$S \cup \{u\}, G$}
+%			\STATE $S = S \cup \{u\}$
+%		\ENDFOR
+%		\RETURN $S$
+%	\end{algorithmic} 
+%\end{algorithm}
 
 \begin{algorithm}
-	\caption{Maximize Monotone and Submodular Function}
-	\label{alg:1} 
+	\caption{\textbf{MC-Greedy(G,k)}:Monte Carlo greedy for influence maximization.}
+	\label{alg:mc_greed} 
 	\begin{algorithmic}[1]
-		\REQUIRE monotone and submodular function $f:2^V \to \mathbb{R}$.
-		\ENSURE $S \ subseteq V$ that achieve $1-\frac{1}{e}$ approximation-ratio.
-		\STATE Initialize $N List$, each $List$ correspondences to a region in $S_{property}$;
-		\STATE $R_I = \{\}$
-		\FORALL {$q_I^{(k)}$ in $Q_I$}
-		\STATE $index=$ the region that $q_I^{(k)}$ belongs to.
-		\STATE put $q_I^{(k)}$ into $List[index]$.
-		\ENDFOR
-		\FORALL {$q_I^{(k)}$ in $Q_I$}
-		\FOR {$i=0$ to $N-1$}
-		\IF {$List[i]$ on the axes}
-		\STATE re-count the points in $List[i]$.
-		\ENDIF
-		\ENDFOR
-		\STATE update $R_I[k]$
-		\ENDFOR
+		\Require $G$: social graph of IC or LT model, $k$: budget of seeds.
+		\Ensure selected seed set $S$.
+		\State Initialize $S = \emptyset$
+		\For {$i=1$ to $k$}
+			\State $v = \mathrm{argmax}_{u \in V \setminus S}$ \Call{MC-Spread}{$S \cup \{u\}, G$}
+			\State $S = S \cup \{u\}$
+		\EndFor
+		\State \Return $S$
+		\Function{MC-Spread}{$S$, $G$}
+			\State $count=0$
+			\For {$j=1$ to $R$}
+				\State simulate diffusion process on graph $G$ with seed set $S$
+				\State $n\_spread \gets$ the number of active nodes
+				\State $count = count + n\_spread$
+			\EndFor
+			\State \Return $count/R$
+		\EndFunction
 	\end{algorithmic} 
 \end{algorithm}
 
+\subsection{CELF算法}
 
+\subsection{PMIA算法}
+
+\subsection{TIM算法}
 
 
 

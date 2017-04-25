@@ -12,8 +12,10 @@
 \usepackage{multirow}
 \usepackage{amsfonts}
 \usepackage{algorithm}
-\usepackage{algorithmic}
+\usepackage{algorithmicx}
+\usepackage{algpseudocode}
 \usepackage{amsmath}
+\usepackage{mathtools}
 %\usepackage[margin=1.1in]{geometry}
 
 \graphicspath{{figures/}}
@@ -24,8 +26,10 @@
 \newcommand{\bkcommand}[1]{\colorbox{bkcolor1}{$\mathtt{\backslash}$\texttt{#1}}}
 \newcommand{\textgraph}[1]{\raisebox{-1ex}{\includegraphics[width=1.5em]{#1}}}
 
+%\floatname{algorithm}{算法}
 \renewcommand{\algorithmicrequire}{\textbf{Input:}} 
 \renewcommand{\algorithmicensure}{\textbf{Output:}}
+
 
 \begin{document}
 \ICTfrontmatter
