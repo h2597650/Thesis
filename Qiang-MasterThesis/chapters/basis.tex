@@ -133,23 +133,8 @@ $f(S \cup \{u\}) - f(S) \geq f(T \cup \{u\}) - f(T)$，
 由于蒙特卡罗模拟是近似得到影响力大小，贪心算法最后可以取得$1-\frac{1}{e}-\varepsilon$的近似比。
 蒙特卡洛贪心算法执行过程如Algorithm \ref{alg:submodular_greed}所示。
 
-%\begin{algorithm}
-%	\caption{\textbf{MC-Greedy(G,k)}:Monte Carlo greedy algorithm for influence maximization.}
-%	\label{alg:mc_greed} 
-%	\begin{algorithmic}[1]
-%		\REQUIRE $G$: social graph of IC or LT model, $k$: budget of seeds.
-%		\ENSURE selected seed set $S$.
-%		\STATE Initialize $S = \emptyset$
-%		\FOR {$i=1$ to $k$}
-%			\STATE $v = \mathrm{argmax}_{u \in V \setminus S}$ {MC-Spread}{$S \cup \{u\}, G$}
-%			\STATE $S = S \cup \{u\}$
-%		\ENDFOR
-%		\RETURN $S$
-%	\end{algorithmic} 
-%\end{algorithm}
-
 \begin{algorithm}
-	\caption{\textbf{MC-Greedy(G,k)}:Monte Carlo greedy for influence maximization.}
+	\caption{\textbf{MC-Greedy(G,k)}: Monte Carlo greedy for influence maximization.}
 	\label{alg:mc_greed} 
 	\begin{algorithmic}[1]
 		\Require $G$: social graph of IC or LT model, $k$: budget of seeds.
@@ -173,40 +158,92 @@ $f(S \cup \{u\}) - f(S) \geq f(T \cup \{u\}) - f(T)$，
 \end{algorithm}
 
 \subsection{CELF算法}
+暴力的贪心算法时间复杂度很高，对于$k$个种子的影响力最大化问题，需要迭代$k$轮，每一轮需要便利每一个种子，利用蒙特卡洛模拟估计影响力大小。
+最终需要的时间复杂度为$O(Rknm)$，$R$是蒙特卡洛模拟需要的传播模拟次数。对于几万个节点的图，贪心算法的运行时间可能就需要几周。
+Leskovec等人\cite{Leskovec2007celf}基于次模问题优化中的lazy evaluation方法，优化了暴力的贪心算法，得到了近700倍的算法性能提升。
+定义函数的差分为$\Delta_u f(S) = f(S \cup \{u\}) - f(S)$，其中$u \not\int S$。
+对于单调次模函数$f$和集合$S \subseteq T \subseteq V$来说，有$\Delta_u f(S) \geq \Delta_u f(T)$。
+在蒙特卡洛贪心算法中，每一轮都需要计算每个节点$v$的$\Delta_v f(S)$然后选出提升最大的节点加入$S$。
+设$S_i$为第$i$轮为止选择到的种子节点集合，如果在第$i$轮算法运行中，发现存在节点$u,v \not\in S_{i-1}$，而且$\Delta_u f(S_{i-2}) \leq \Delta_v f(S_{i-1})$。
+那么由次模性质可以得到$u$在第$i$轮的提升一定会小于$v$，所以不会被选为种子，在第$i$轮$u$的影响力提升就没有必要再计算。
+所以加入一个结构存储之前计算的影响力提升，可以减少对影响力的重复估算，极大提升算法效率。
+CELF算法就是利用这个思想，通过优先队列实现。
+
+\begin{algorithm}
+	\caption{\textbf{CELF(G,k)}: accelerated greedy algorithm with lazy evaluation.}
+	\label{alg:celf} 
+	\begin{algorithmic}[1]
+		\Require $G$: social graph of IC or LT model, $k$: budget of seeds.
+		\Ensure selected seed set $S$.
+		\State Initialize $S = \emptyset$, priority queue $Q = \emptyset$
+		\ForAll {$v$ in V}
+			\State $v.margin \gets$ \Call{MC-Spread}{$\{v\}, G$}
+			\State $v.iteration = 1$
+			\State insert element $v$ into $Q$ with $v.margin$ as the key
+		\EndFor
+		\State $iteration = 1, spread = 0$
+		\While{$iteration \leq k$}
+			\State extract top (max) element $v$ of $Q$
+			\If{$v.iteration == iteration$}
+				\State $S = S \cup \{u\}$
+				\State $iteration = iteration+1$
+				\State $spread = spread + v.margin$
+			\Else
+				\State $v.margin \gets$ \Call{MC-Spread}{$S \cup \{v\}, G$} - $spread$
+				\State re-insert $v$ into $Q$
+			\EndIf
+		\EndWhile
+		\State \Return $S$
+	\end{algorithmic} 
+\end{algorithm}
 
 \subsection{PMIA算法}
+MC-Greedy算法和CELF算法还是通过蒙特卡洛模拟来估算集合的影响力大小。陈卫等人提出了一个启发式算法，近似的估算影响力，再次提升了算法的性能，同时算法的效果能够媲美贪心算法。
+PMIA算法\cite{chen2010sharpphard}中，利用比较容易计算的树状图来避免了蒙特卡洛模拟。
+核心子算法是Maximum Influence Arborescence(MIA)，PMIA算法对于每一个节点$v$构建了以$v$为根的局部树状结构，
+然后在局部的树状结构上可以用动态规划高效计算影响力。
+因为影响力传播衰减很快，而且估算整体的影响力很难，局部树状结构也是合理的。
+PMIA算法同时也根据树状结构设计了线性更新影响力提升值的方法，在加入新的种子节点后很快更新每个节点的影响力。
+原算法的整体过程比较复杂，由多个子算法构成，这里不再赘述。
 
 \subsection{TIM算法}
+基于蒙特卡洛模拟的贪心算法速度较慢，启发式算法速度较快但是没有理论的近似比保证。
+Borgs等人\cite{borgs2014rrset}在14年提出了基于逆向可达集合（Reverse Reachable Set）的近线性算法，同时也有基于最大集合覆盖的$1-\frac{1}{e}$的近似比保证。
+算法的核心思想是做逆向蒙特卡洛模拟，把图中每条有向边反向，沿着反向的边做传播。
+算法会随机的选择图中的节点$v$，然后以$v$为根节点做反向蒙特卡洛模拟，传播过程中激活的节点称为$v$的逆向可达集合，多次模拟得到多个逆向可达集合。
+Borgs等人证明了，给定种子集合$S$，$v$被激活的概率就是$S$和$v$的逆向可达集合有交集的概率。
+因此可以随机从途中选择节点，产生逆向可达集合，多次实验之后生成很多逆向可达集合。
+给定一个种子集合，影响力大小正比于种子集合与多少个多逆向可达集合有交集，这就转变为最大集合覆盖问题，可以用贪心很快求解。
+随后Tang等人\cite{tang2014newrrset}工程上实现了这个算法（TIM算法），并测试了算法在上亿节点的效果和运行时间。该算法已经能处理Twitter这种级别的社交网络。
+在求解最大覆盖问题时，依据逆向可达集合简历倒排索引，维护每个节点覆盖的逆向可达集合，每次贪心的选择覆盖最多逆向可达集合的节点加入种子节点。
 
-
-
-\section{最新工作与研究趋势}
-由于基于BoW的图像检索框架本身的特点，几何校验一直是人们研究的热点。无论是检索时检验还是检索后校验，最近几年都有更快、精度更高的方法被提出来。通过对上一节的分析我们可以看到在BoW框架下，几何校验存在两个固有难题：一个是会显著增加计算复杂度；另一个是无法很好的解决图片旋转的问题。例如基于RANSAC的方法\cite{philbin2007object}\cite{chum2007total}只能对TopN的图片进行校验，并且需要重力向量假设（即图片不存在旋转）；同样WGC和SPM都无法解决图片旋转的问题，并且需要额外的计算和存储资源。所以目前的在BoW框架下的研究趋势是：
-\begin{enumerate}
-	\item 快速的几何校验；
-	\item 尽可能减少内存;
-	\item 全局几何校验与局部几何校验结合；
-	\item 检索时校验与检索后校验结合；
-\end{enumerate}
-
-在最新的几何校验算法中，\cite{Zhong2015Fast}对FSM进行了改进，提出了更快的后校验方案DSM；\cite{li2015pairwise}提出了pair-wise的几何校验，结合图像全局的几何关系和特征点局部的几何关系，得到了state-of-the-art的检索精度。
-
-由于基于CNN的图像检索框架提取的图片的全局特征，不存在局部特征之间的几何校验问题，即图片的几何关系已经编码到了全局特征中了。但是，基于CNN的检索框架并没有很好的解决图片旋转的问题，目前对于查询图片存在旋转的情况主要通过以下方法进行处理：
-\begin{enumerate}
-	\item 人为的将图片调整为竖直方向\cite{babenko2014neural}，这种方法不适用于实际的系统；
-	\item 在训练时进行数据扩大，即把图片各个方向的版本都输入的CNN中参与训练\cite{babenko2014neural}，这种方法会延长训练时间；
-	\item 通过Max Pooling的手段，将不同角度的图片的全局特征融合为一个全局特征\cite{chandrasekhar2015practical}，这种方法不具有扩展性。
-\end{enumerate}
-
-
-\section{本文的研究框架与思路}
-\begin{figure}[h]
-	\centering
-	\includegraphics[width=0.9\textwidth]{frame_3.jpg}
-	\caption{研究框架图}\label{fig:frame}
-\end{figure}
-尽管研究者们已经对图像检索中的几何校验做出了各种各样的尝试，但该领域仍然存在许多尚待解决的问题。例如如何快速的进行几何校验，同时不增加系统的负担；如何更好的解决图片旋转的问题，使几何校验算法可以更好的应用于实际的图像检索系统中去。为了解决上述问题，本文按照图\ref{fig:frame}所示的框架，提出了更加实用的几何校验方案Region Similarity Arrangement（RSA）。RSA不会增加BoW检索框架的内存，并且只需要很少的计算量，但是可以显著的提高的BoW baseline的检索精度。同时利用了CNN可以更好的理解图片语义信息这一特点，提出了Main Orientation Net（NMOet）。MONet不仅可以对基于CNN的图像检索框架提供一定的几何校验，同时可以应用于传统的BoW框架中，解决了传统几何校验方案无法处理图片旋转的问题。
+\begin{algorithm}
+	\caption{\textbf{TIM(G,k)}: Two-phase Influence Maximization.}
+	\label{alg:tim} 
+	\begin{algorithmic}[1]
+		\Require $G$: social graph of IC or LT model, $k$: budget of seeds.
+		\Ensure selected seed set $S$.
+		\State Initialize $S = \emptyset$, $\mathcal{R} = \emptyset$
+		\State compute the the number of RRsets needed $\theta$
+		\For {$i=1$ to $\theta$}
+			\State randomly pick a node $v$ from $V$
+			\State generate RRset $R_v$ for $v$
+			\State insert $R_v$ into $\mathcal{R}$
+		\EndFor
+		\State build reverse index $Idx$ of $\mathcal{R}$
+		\For {$i=1$ to $k$}
+			\State fetch $v$ that has max degree from $Idx$
+			\State insert $v$ into $S$
+			\State update $Idx$
+		\EndFor
+		\State \Return $S$
+	\end{algorithmic} 
+\end{algorithm}
 
 \section{本章小结}
-本章介绍了基于BoW和基于CNN的图像检索框架。基于BoW的图像检索已经是一种比较成熟的框架，已经存在很多经典的改进算法，本章对这些算法也进行了详细的介绍，包括查询扩充、软量化、注入技术和RootSIFT。对于BoW图像检索中的几何校验算法，本章介绍了三种经典的算法，包括两种后校验算法FSM和WGC和一种检索时算法SPM。对于以上算法，我们对其优劣进行了简单的分析和总结。另外，本章还介绍了国际上关于该课题最新的一些思路和研究趋势，这为我们未来的工作指明了方向。在本章的最后，我们提出了自己的研究框架与思路，在接下来的章节中，我们将按照该框架展开我们的研究工作。
+本章主要介绍了本文使用的Kleinberg小世界模型以及影响力传播模型和影响力最大化算法等概念，并给出了精确的数学定义。
+2.1节介绍了Kleinberg的小世界模型，主要分析了弱连接的生成方式。
+2.2节介绍了影响力传播模型，重点介绍了线性阈值模型和独立级联模型以及他们的通用形式。
+2.3节介绍了基于线性阈值模型或者独立级联模型和影响力最大化，影响力最大化算法在近些年来被许多学者研究，很多近似算法和启发式算法被提出。
+
 
