@@ -1,21 +1,23 @@
 
 \documentclass[refcompress,eversion,noinfo]{ICTthesis}
 
+\usepackage{amsmath}
+\usepackage{amsthm}
 \usepackage{tabularx}
 \usepackage{longtable}
 \usepackage{color}
 \usepackage{colortbl}
 \usepackage{graphicx}
 \usepackage{subfigure}
-\usepackage{amsmath, epsfig}
+\usepackage{epsfig}
 \usepackage{enumerate}
 \usepackage{multirow}
 \usepackage{amsfonts}
 \usepackage{algorithm}
 \usepackage{algorithmicx}
 \usepackage{algpseudocode}
-\usepackage{amsmath}
-\usepackage{mathtools}
+\usepackage{tikz}
+\usetikzlibrary{decorations.pathreplacing}
 %\usepackage[margin=1.1in]{geometry}
 
 \graphicspath{{figures/}}
@@ -30,6 +32,12 @@
 \renewcommand{\algorithmicrequire}{\textbf{Input:}} 
 \renewcommand{\algorithmicensure}{\textbf{Output:}}
 
+\newtheorem{theorem}{定理}
+\newtheorem{lemma}{引理}
+\newtheorem{proposition}[lemma]{命题}
+\newtheorem{corollary}[theorem]{推论}
+\newtheorem{definition}{定义}
+
 
 \begin{document}
 \ICTfrontmatter
@@ -38,7 +46,7 @@
 \include{chapters/introduction}
 \include{chapters/basis}
 \include{chapters/model}
-%\include{chapters/monet}
+\include{chapters/inapp}
 %\include{chapters/summary}
 \ICTbackmatter{\bibliography{bib/ref}\nocite{*}}
 %\bibliography{bib/ref}

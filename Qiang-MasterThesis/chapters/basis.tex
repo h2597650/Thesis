@@ -37,11 +37,11 @@ $E$是网络中的关注或者粉丝关系，每条边也会有权值，权值�
 
 
 \subsection{独立级联模型}
-%\begin{figure}[h]
-%	\centering
-%	\includegraphics[width=\textwidth]{independent_cascade.png}
-%	\caption{独立级联模型示意}\label{fig:independent_cascade}
-%\end{figure}
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=\textwidth]{independent_cascade.png}
+	\caption{独立级联模型示意}\label{fig:independent_cascade}
+\end{figure}
 独立级联模型（Independent Cascade Model）在03年被Kempe等人\cite{Kempe2003maximizing}提出，
 在独立级联模型中，每条有向边$(u,v) \in E$都有一个概率值$p(u,v) \in [0,1]$代表着$v$被$u$影响的概率。
 传播是随着离散时间片$t$增加而扩散的，定义$S_t$为到时间片$t$时刻为止被激活的节点的集合，定义$S_{-1}=\emptyset$。
@@ -131,9 +131,9 @@ $f(S \cup \{u\}) - f(S) \geq f(T \cup \{u\}) - f(T)$，
 然而每一步$\sigma(S)$的计算是$\#$P-Hard的，不能精确求解。
 通常采用蒙特卡洛模拟方法来估算影响力，随机模拟10000次传播过程，取被激活节点个数的期望作为影响力。
 由于蒙特卡罗模拟是近似得到影响力大小，贪心算法最后可以取得$1-\frac{1}{e}-\varepsilon$的近似比。
-蒙特卡洛贪心算法执行过程如Algorithm \ref{alg:submodular_greed}所示。
+蒙特卡洛贪心算法执行过程如Algorithm \ref{alg:mc_greed}所示。
 
-\begin{algorithm}
+\begin{algorithm}[h]
 	\caption{\textbf{MC-Greedy(G,k)}: Monte Carlo greedy for influence maximization.}
 	\label{alg:mc_greed} 
 	\begin{algorithmic}[1]
@@ -169,7 +169,7 @@ Leskovec等人\cite{Leskovec2007celf}基于次模问题优化中的lazy evaluati
 所以加入一个结构存储之前计算的影响力提升，可以减少对影响力的重复估算，极大提升算法效率。
 CELF算法就是利用这个思想，通过优先队列实现。
 
-\begin{algorithm}
+\begin{algorithm}[h]
 	\caption{\textbf{CELF(G,k)}: accelerated greedy algorithm with lazy evaluation.}
 	\label{alg:celf} 
 	\begin{algorithmic}[1]
@@ -217,7 +217,7 @@ Borgs等人证明了，给定种子集合$S$，$v$被激活的概率就是$S$和
 随后Tang等人\cite{tang2014newrrset}工程上实现了这个算法（TIM算法），并测试了算法在上亿节点的效果和运行时间。该算法已经能处理Twitter这种级别的社交网络。
 在求解最大覆盖问题时，依据逆向可达集合简历倒排索引，维护每个节点覆盖的逆向可达集合，每次贪心的选择覆盖最多逆向可达集合的节点加入种子节点。
 
-\begin{algorithm}
+\begin{algorithm}[h]
 	\caption{\textbf{TIM(G,k)}: Two-phase Influence Maximization.}
 	\label{alg:tim} 
 	\begin{algorithmic}[1]
