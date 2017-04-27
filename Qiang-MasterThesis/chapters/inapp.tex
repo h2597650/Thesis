@@ -202,6 +202,7 @@ P_a(v_i) = P_a(v_{i+1})(1-\varepsilon(1-P_a(v_{i+1}))) <  P_a(v_{i+1})(1-\vareps
 \end{proof}
 由引理\ref{lem:tree_prob}我们知道$T_\varepsilon$在输入集合大小为$1$时输出节点被激活的概率是$o(1)$，
 $T_\varepsilon$的确是一个两个输入节点的概率与门。
+我们称概率与门在输入节点没有全部激活且输出节点保持未激活时为成功运作。
 
 
 我们已经构造了两个输入节点的树状机关，我们拓展机关$T_\varepsilon$来得到$n$个输入节点的与门$T_\varepsilon^n$。
@@ -210,16 +211,11 @@ $T_\varepsilon$的确是一个两个输入节点的概率与门。
 以此类推，我们得到最终的输出节点$s_{12\dots n}$。
 在这个结构中，$s_1, s_2, \dots, s_n$中有节点未被激活时，$s_{12\dots n}$很大概率不会被激活。
 如果所有的$T_\varepsilon$都表现出与门的性质，那么整体上就构成了一个$n$个输入节点的概率与门。
-由引理\ref{lem:tree_prob}可得深度为$d$的$T_\varepsilon$最多以$(\frac{2-\varepsilon}{2})^{d}$的概率打破与门的规则。
+由引理\ref{lem:tree_prob}可得深度为$d$的$T_\varepsilon$最多以$(\frac{2-\varepsilon}{2})^{d}$的概率不成功运作。
 通过Union Bound，$T_\varepsilon^n$在输入中有未激活节点时输出节点被激活的概率至多为$n(\frac{2-\varepsilon}{2})^{d}$。
 $T_\varepsilon^n$一共包含$n\times(2^d-1) = n2^d-n$个节点。
 
 
-
-
-
-先说m们，然后下一节说sketch
-We then construct a multi-input probabilistic-AND gate based on our probabilistic-AND gate by the similar method to construct multi-input-AND gate based on 2-input-AND gate. Finally, we show if influence maximization problem can be approximated beyond the ratio shown above, we can solve the set cover problem in polynomial time. The main idea is as follows. For any set cover instance, we will put all elements to be the input of our multi-input-probabilistic-AND gate, and connect the output with a large number of additional nodes. Thus, if $k$ sets can cover all elements, all of those addition nodes will be activated, on contrast, if one of the elements cannot be covered, almost all of the additional nodes will remain inactivated.
 
 \subsection{基于Set Cover的不可近似性规约}
 在本节基于概率与门，我们证明定理\ref{the:inapp}。
@@ -236,57 +232,149 @@ We then construct a multi-input probabilistic-AND gate based on our probabilisti
 集合节点$s_i$会持有指向所有它覆盖元素节点的有向边，而且所有元素节点$e_j$的阈值函数是$f_{e_j}(1)=1$。
 也就是说只要覆盖$e_j$的集合节点中至少有一个被激活，$e_j$就会被激活。
 接下来们增加$n^\alpha$个与门节点$x_1, x_2, \dots, x_{n^\alpha}$，$\alpha$的值在后文确定。
-在节点$x_k$和元素节点$e_1, e_2, \dots, e_n$之间插入$n$输入概率与门$T_\varepsilon^n$，$x_k$是输出节点，如图\ref{}所示。
-
+在节点$x_k$和元素节点$e_1, e_2, \dots, e_n$之间插入$n$输入概率与门$T_\varepsilon^n$，$x_k$是输出节点，如图\ref{fig:inapp_structure}所示。
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=\textwidth]{inapp_structure.png}
+	\caption{集合覆盖构造$\varepsilon$-次模近似图}\label{fig:inapp_structure}
+\end{figure}
 然后对于参数$\alpha$，我们对每一个与门节点$x_k$添加$n^\alpha$个冗余节点$c_1, c_2, \dots, c_{n^\beta}$。
 对每个冗余节点$c_l$，阈值函数同样是$f_{c_l}(1)=1$。
 构建好的图中有集合节点$s_i$，元素节点$e_j$，与门节点$x_k$，冗余节点$c_l$以及构成概率与门的节点。
-除了构成概率与门的节点阈值函数是等式\ref{eq:func_g}定义的$\varepsilon$-次模毕竟函数，其余节点的阈值函数都是次模函数。
+除了构成概率与门的节点阈值函数是等式\ref{eq:func_g}定义的$\varepsilon$-次模逼近函数，其余节点的阈值函数都是次模函数。
+图\ref{fig:inapp_structure}中红色的边代表着概率与门中节点的阈值函数是$\varepsilon$-次模逼近函数。
 
+接下来我们计算$T_\varepsilon^n$的深度，需要$T_\varepsilon^n$足够深才能以高概率保证$n^\alpha$个$T_\varepsilon^n$全部成功运作。
+运行Union Bound，$n^\alpha$个$T_\varepsilon^n$至少有一个运作失败的概率至多是$n^{1+\alpha}(\frac{2-\varepsilon}{2})^{d}$。
+令$d = (1+\alpha+\lambda)\log n / \log{\frac{2}{2-\varepsilon}}$，
+在这个情况下所有概率与门$T_\varepsilon^n$均成功运作的概率至少是$1-n^{-\lambda}$。
 
+如果我们能找到$k$个集合覆盖住所有$n$个元素，那么在这个构造的图中我们把对应那$k$个集合的节点选作种子节点。
+接下来种子节点会激活所有的元素节点$e_1, e_2, \dots, e_n$，然后$T_\varepsilon^n$中的所有节点都会被激活。
+最终，所有的与门节点$x_1, x_2, \dots, x_{n^\alpha}$以及他们指向的冗余节点都会被激活，一共被激活的节点个数是
+$$k+n+n^{\alpha+1}(2^d-1)+n^{\alpha\beta} \geq n^{\alpha\beta}.$$
+整个图中一共有
+$$k+n+n^{\alpha+1}(2^d-1)+n^{\alpha\beta} \geq n^{\alpha\beta}$$
+个节点，几乎图中所有的节点都会被激活。
+另一方面，如果集合覆盖实例没有大小为$k$的解，就不能激活所有的元素节点$e_j$。
+影响力传播过程中与门节点$x_1, x_2, \dots, x_{n^\alpha}$以高概率概率$1-n^{-\lambda}$都不会被激活。
+此时，为了提升影响力，可以选择把与门节点$x_j$作为种子节点或者尽可能多的去激活元素节点$e_j$。
+如果选择与门节点作为种子则最终激活至多$k+n+kn^{\beta}$个节点。
+或者最多激活$n-1$个元素节点并激活几乎所有在概率与门机关中的$\varepsilon$-次模逼近节点，
+这种情况下以高概率所有与门机关成功运作，最多$k+n-1+n^{\alpha+1}(2^d-1)$个节点会被激活。
+如果概率与门运作失败，就假设此时所有节点最终都被激活。
 
-
-
-Here we calculate the depth of $T_\varepsilon$ in order to make sure that the $n^\alpha$ $T_\varepsilon^n$ are all AND gate with high probability.
-Again we apply Union Bound to calculate the probability upper bound of at least one $T_\varepsilon^n$ fails
---- $n^{1+\alpha}(\frac{2-\varepsilon}{2})^{d}$.
-We set $d = (1+\alpha+\lambda)\log n / \log{\frac{2}{2-\varepsilon}}$,
-so all the $T_\varepsilon^n$ observe the rule of AND gate with probability at least $1-n^{-\lambda}$.
-
-If we can find $k$ sets that cover all the $n$ elements, then we just select the $k$ nodes corresponding to the $k$ sets as seed nodes.
-Then the seed nodes will activate nodes $e_1, e_2, \dots, e_n$ and then all nodes in gadgets $T_\varepsilon^n$ will become activated.
-Finally, all the child nodes of $x_1, x_2, \dots, x_{n^\alpha}$ become activated, and totally $k+n+n^{\alpha+1}(2^d-1)+n^{\alpha\beta} \geq n^{\alpha\beta}$ nodes become activated in total, while the graph consists of $N = m+n+n^{\alpha+1}(2^d-1)+n^{\alpha\beta}$ nodes, nearly all nodes are activated.
-On the other hand, if there is no solution of size $k$ for this set cover problem, we can not activate all element nodes $e_i$.
-During the influence spread of a given target nodes,
-none of $x_1, x_2, \dots, x_{n^\alpha}$ will become activated with probability al least $1-n^{-\lambda}$.
-Under this circumstance, we can select nodes labeled with $x$ as seeds or just try to activate more nodes $e_i$.
-Totally we can just activate at most $k+n+kn^{\beta}$ nodes if we choose $x_i$ as seeds.
-Otherwise we can assume that at most $n-1$ elements are covered and all gadget nodes are activated.
-In this case $k+n-1+n^{\alpha+1}(2^d-1)$ nodes will become active if all probabilistic AND gate work perfectly.
-One the other hand if these $T_\varepsilon^n$ fails with probability at most $n^{-\lambda}$, we just assume that all the nodes will become activated eventually.
-We can set $n^{\beta} = n^{\alpha-1} \cdot 2^d \cdot n^{\delta}$ for $\delta>0$ to 
-ensure that the fraction of gadget nodes and dummy nodes is slightly less than $n^{\frac{1}{\alpha-1}}$. 
-When $n$ is large enough the influence size we obtain  
-is less then $kn^{\beta} \leq n^{\beta+1}$ or $n^{\alpha+1}2^d$ w.h.p. when Set Cover is not solved.
-For any influence maximization algorithm,
-there exists a graph of $N$ nodes where at most $n^{\alpha+1}(2^d-1)$ nodes have $\varepsilon$-almost submodular threshold function,
-for any result obtained,
-with probability at least $1-n^{-\lambda}$,
-the influence size is less than $1/n^{\alpha-1}$ of $\sigma(S^*)$,
-unless we can solve Set Cover problems within polynomial time.
-Here $N \geq n^{\alpha+\beta}$, $d = (1+\alpha+\lambda)\log n / \log{\frac{2}{2-\varepsilon}}$, $\beta = (\alpha+1) + (1+\alpha+\lambda) / \log{\frac{2}{2-\varepsilon}} + \delta$.
-We can substitute the parameter into the conclusion, we obtain that $\forall \alpha>1, \lambda>0, \delta>0$, there exists
-$b = 1/\log{\frac{2}{2-\varepsilon}}$,
-$\varphi= \frac{ \min\{\alpha-1, \lambda\}}{2\alpha+\delta-1+b(1+\alpha+\lambda)}$ and
-$\gamma =\frac{\alpha+1+b(1+\alpha+\lambda)}{2\alpha+\delta-1+b(1+\alpha+\lambda)}$,
-for any influence maximization algorithm based on measg{gamma},
-there exists an instance of graph,
-the approximation ratio is less than $n^{-\gamma}$.
-Notice that $\varphi \geq \frac{\gamma}{3+3b}$ when we set $\alpha=\lambda+1$ and $\lambda \geq 1$.
-$\gamma$ ranges in $(0,1)$, hence the theorem follows.
+现在我们设置参数$\alpha$和$\beta$，可以$\delta>0$取令$n^{\beta} = n^{\alpha-1} \cdot 2^d \cdot n^{\delta}$。
+此时与门机关中节点的个数和冗余节点个数的比值为$n^{\alpha+1}(2^d-1) / n^{\alpha\beta} < n^{\frac{1}{\alpha-1}}$。
+当$n$区域无穷时，如果集合覆盖问题无解，影响力范围以高概率$1-n^{-\lambda}$不会超过$kn^{\beta} \leq n^{\beta+1}$和$n^{\alpha+1}2^d$。
+也就是说对于任意的影响力最大化算法，存在一个$N$个节点的图，其中至多有$n^{\alpha+1}(2^d-1)$个$\varepsilon$-次模逼近节点，
+而对于算法输出的种子集合，以$1-n^{-\lambda}$的概率影响力不会超过$kn^{\beta} \leq n^{\beta+1}$和$n^{\alpha+1}2^d$，
+除非集合覆盖问题有多项式时间的算法（NP=P）。
+在这个图中，最优的种子集合$S^*$的影响力几乎是$N$，可以得到近似比不会超过
+\begin{equation}
+\label{eq:inapp_ratio}
+\begin{array}{ll}
+& \frac{\max\{kn^{\beta}, n^{\alpha+1}2^d\} * (1-n^{-\lambda}) + n^{-\lambda} * \sigma(S^*)}{\sigma(S^*)} \\
+\leq & n^{-\lambda} + 
+\frac{\max\{n^{\beta+1}, n^{\alpha+1}2^d\} * (1-n^{-\lambda})}
+{k+n+n^{\alpha+1}(2^d-1)+n^{\alpha\beta} \geq n^{\alpha\beta}} \\
+\leq & n^{-\lambda} + n^{-(\alpha-1)}
+\end{array}
+\end{equation}
+这里$N \geq n^{\alpha+\beta}$，与门机关的深度为$d = (1+\alpha+\lambda)\log n / \log{\frac{2}{2-\varepsilon}}$，
+参数$\beta = (\alpha+1) + (1+\alpha+\lambda) / \log{\frac{2}{2-\varepsilon}} + \delta$。
+我们把参数带入不等式\ref{eq:inapp_ratio}和上述描述，得到
+对于任意的$\alpha>1, \lambda>0, \delta>0$，存在$b = 1/\log{\frac{2}{2-\varepsilon}}$
+$\varphi= \frac{ \min\{\alpha-1, \lambda\}}{2\alpha+\delta-1+b(1+\alpha+\lambda)}$和
+$\gamma =\frac{\alpha+1+b(1+\alpha+\lambda)}{2\alpha+\delta-1+b(1+\alpha+\lambda)}$，
+任意的基于$(\gamma,\varepsilon)$-次模逼近图的影响力最大化算法，
+都可以构造出一个$\varepsilon$-次模逼近图实例，在这个图上算法的近似比不会超过$n^{-\gamma}$。
+注意到这里$\varphi \geq \frac{\gamma}{3+3b}$在我们设定 $\alpha=\lambda+1$且$\lambda \geq 1$时。
+$\gamma$的取值范围是$(0,1)$，也就是对于任意比例的$\varepsilon$-次模逼近节点结论都成立。
+至此，我们证明了定理\ref{the:inapp}。
 \end{proof}
 
-\section{近似算法}
+\section{基于上下届的近似算法}
+在前一小节，我们证明了$\varepsilon$-次模逼近节点较多时影响力最大化算法很难近似。
+在本小姐，我们讨论图中只有比较少的$\varepsilon$-次模逼近节点的情况，通常是常数个或者$\log n$个。
+首先我们提供了基于图中有较少非次模节点的朴素的贪心算法，
+然后把非次模节点的阈值函数限定为$\varepsilon$-次模逼近并进一步提升了算法效果。
+
+
+
+\subsection{Approximation Algorithm with Small Number of Non-submodular Nodes}
+In the case of $\ell (\ell<k)$ non-submodular nodes, we provide an approximate algorithm as follows. We firstly add these non-submodular nodes into the seed set. Then generate the rest of seed set by classical greedy algorithm.
+\begin{theorem}\label{the:naive_greedy}
+Given a graph of $n$ nodes where all nodes have submodular threshold function except $\ell < k$ nodes,
+for influence maximization of $k$ seeds
+with greedy scheme we can obtain a $(1-e^{-\frac{k-\ell}{k}})(1-\frac{1}{e})$-approximation.
+\end{theorem}
+\begin{proof}
+Assuming that $S^*$ is the optimal set that maximizes the expectation of influenced nodes,
+$V_e$ are the set of $\ell$ nodes with non-submodular threshold function.
+let $S^*_{V_e} = S^* \cup V_e$.
+Apparently, $\sigma(S^*_{V_e}) \geq \sigma(S^*)$ since $\sigma(\cdot)$ is monotone.
+Since nodes in $V_e$ have non-submodular threshold functions, so we can not directly apply greedy scheme to find the seeds set.
+But we can first add $V_e$ to the seed set and
+therefore the influence function $\sigma(S\cup V_e)$ is submodular when $S \subseteq V-V_e$.
+In this case, we obtain a greedy solution $S^g_{V_e,k}$ with adding extra $k$ nodes to original seed set $V_e$ with greedy scheme.
+Greedy solution has the approximation ratio $1-\frac{1}{e}$, so we have $\sigma(S^g_{V_e,k}) \geq (1-\frac{1}{e})\sigma(S^*_{V_e})$ .
+Repeatedly utilizing the submodularity of $\sigma(\cdot)$,
+we obtain that $\sigma(S^g_{V_e,k-\ell})
+\geq (1-e^{-\frac{k-\ell}{k}}) \sigma(S^*)$ (see Appendix~\ref{app:e_submodular_app} for detail).
+Hence we can first add all nodes without submodular threshold function to initial seeds set and then apply greedy scheme to obtain a solution with theoretical approximation ratio.
+The theorem follows.
+\end{proof}
+
+\section{Proof in Theorem~\ref{the:naive_greedy}}\label{app:e_submodular_app}
+\begin{proof}
+We assume that $S^*_{V_e}=V_e \cup \{s_1,s_2,\dots,s_{k'}\}, k'\leq k$, $S_i = \{s_1,s_2,\dots,s_i\}$,
+where $s_i \not\in V_e$.
+Indeed, according to the proof of approximation ratio of $1-1/e$,
+for $i\leq k$we have
+\begin{equation*}
+\begin{array}{ll}
+&\sigma(S^*_{V_e})\\
+\leq & \sigma(S^*_{V_e} \cup S^g_{V_e,i})\\
+= & \sigma(S^g_{V_e,i}) +
+	\sum_{j=1}^{k'} \big( \sigma(S^g_{V_e,i} \cup S_j) - 	
+	\sigma(S^g_{V_e,i} \cup S_{j-1})\big)\\
+\leq & \sigma(S^g_{V_e,i}) +
+	\sum_{j=1}^{k'} \big( \sigma(S^g_{V_e,i} \cup \{s_j\}) - 	
+	\sigma(S^g_{V_e,i})\big)\\
+\leq & \sigma(S^g_{V_e,i}) +
+	k\cdot \big( \sigma(S^g_{V_e,i+1})-\sigma(S^g_{V_e,i})\big)\\
+\end{array}
+\end{equation*}
+The first line follows from monotonicity of $\sigma$,
+third line follows from the submodularity of $\sigma$,
+forth line holds because $S^g_{V_e,i+1}$ is built greedily from
+$S^g_{V_e,i}$ in order to maximize marginal benefit.
+Hence
+\begin{equation*}
+\begin{array}{ll}
+\sigma(S^*_{V_e}) - \sigma(S^g_{V_e,i}) \leq
+k\cdot \big( \sigma(S^g_{V_e,i+1})-\sigma(S^g_{V_e,i})\big) \\
+\sigma(S^*_{V_e}) - \sigma(S^g_{V_e,i+1}) \leq
+(1-\frac{1}{k}) \big( \sigma(S^*_{V_e}) - \sigma(S^g_{V_e,i}) \big)
+\end{array}
+\end{equation*}
+
+When we apply greedy scheme for $k-\ell$ steps,
+\begin{equation*}
+\begin{array}{ll}
+\sigma(S^*_{V_e}) - \sigma(S^g_{V_e,k-\ell})
+&\leq (1-\frac{1}{k})^{k-\ell} (\sigma(S^*_{V_e}) - \sigma(V_e))\\
+&\leq (1-\frac{1}{k})^{k-\ell} \sigma(S^*_{V_e})
+\end{array}
+\end{equation*}
+$$\sigma(S^g_{V_e,k-\ell})
+\geq (1-(1-\frac{1}{k})^{k-\ell}) \sigma(S^*_{V_e})
+\geq (1-e^{-\frac{k-\ell}{k}}) \sigma(S^*)$$
+
+$(1-e^{-\frac{k-\ell}{k}})$ is concave in range $[0,k]$,
+so we can easily induce that $(1-e^{-\frac{k-\ell}{k}}) \geq \frac{k-\ell}{k}(1-\frac{1}{e})$.
+\end{proof}
 
 
 \section{本章小结}

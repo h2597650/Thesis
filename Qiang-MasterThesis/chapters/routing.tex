@@ -1,0 +1,277 @@
+% !Mode:: "TeX:UTF-8"
+\chapter{复杂路由的研究}
+
+\def \doubleto {\stackrel{ \geq 2}{\longrightarrow}}
+
+本章主要研究了在有向Kleinberg小世界网络中复杂路由的研究，网络模型的设定和Kleinberg最初提出分散式路由时的网络模型一致\upcite{Kleinberg2000small}。
+正如和第二章描述的，本章考虑节点$u$只能激活自己有向边指向的节点（出邻居）的分散式路由方式。
+只有当一个节点$u$被$k$个节点发出的有向边指向时，$u$才会被变成暴露状态。
+对于强连接，仍然认为它们是无向的或者双向的。
+在每一个时间步骤，我们仅有知道被感染节点和被感染节点的强连接和弱连接，而对于未感染节点的弱连接算法一无所知。
+这样可以在证明中使用延迟选择原则\upcite{Motwani1995randomized}，和\upcite{Kleinberg2000small}在证明分散式路由中使用的原则一样。
+这意味着节点$u$的弱连接只有在$u$被感染时才被选取，进而算法才知道$u$的弱连接。
+最初的种子节点是$k$个网格上连续的节点，如果对于Kleinberg小世界网络设置$p = q = k$，因此$k$-复杂路由最终可以感染目标节点$t$。
+接下来给出复杂路由的主要结论。
+
+\section{复杂路由的结论} \label{sec:routing}
+
+我们考虑一个$2$-复杂路由的任务，起始给定一对相邻的种子节点$S_0 = \{s_0^1, s_0^2\}$（$s_0^1$ 和 $s_0^2$的曼哈顿距离为$1$），
+目标是通过分散式路由到达目标节点$t$。
+在本文中，我们讨论$t$距离种子节点最远的情况，也就是$s_0^1$与$t$的曼哈顿距离为$\Theta(\sqrt{n})$。
+从已经暴露的节点集合中选择哪个节点来感染是由路由选择算法决定的
+，一个比较特殊的路由选择策略是在已经暴露的节点中选择距离目标$t$曼哈顿距离最小的节点，这也被称为贪心路由算法。
+本章的结果对于任何分散式路由选择算法都成立，甚至是随机算法。
+下面是有关路由时间的下界的结果。
+
+
+
+\begin{theorem}\label{thm:routing}
+对于任意的分散式路由策略（算法），甚至是随机的策略，对于任意的比较小的$\varepsilon > 0$，在有向Kleinberg小世界网络中，$2$-复杂路由的路由时间有下面
+依赖于Kleinberg小世界模型参数$\alpha$的下界：
+
+
+\begin{enumerate}
+\item
+当 $\alpha\in [0,2)$时， 路由时间是 $\Omega( n^{\frac{1-\varepsilon}{\alpha + 2}})$ 的概率至少为 $1-O(n^{-\varepsilon})$ 
+，期望路由时间为 $\Omega( n^{\frac{1}{\alpha + 2}})$。
+\item
+当 $\alpha = 2$时， 路由时间是 $\Omega(n^{\frac{1}{4}})$ 的概率至少为 $1-O(\frac{1}{\log n})$ 
+，期望路由时间为 $\Omega(n^{\frac{1}{4}})$。
+\item
+当 $\alpha\in (2,+\infty)$时， 路由时间是 $\Omega( n^{\frac{\alpha-2\varepsilon}{2(\alpha+2)}})$ 的概率至少为 $1-O(n^{-\varepsilon})$ 
+，期望路由时间为 $\Omega( n^{\frac{\alpha}{2(\alpha+2)}})$。
+
+\end{enumerate}
+\end{theorem}
+
+在本章的开始首先给出一些定义。
+对于一个已感染节点集合$S$，定义集合$E(S)$为被已感染节点集合$S$暴露的节点的集合，更精确的定义为
+$E(S) = \{x\notin S\ |\ S \mbox{ 有两条有向边指向 } x\}$。
+从$E(S)$的定义可以知道复杂路由是沿着Kleinberg小世界网络中的有向边扩散的。
+
+在接下来的小节中，本文首先分析有向Kleinberg小世界网络中普通路由策略的的性能，
+然后把结果推广到每一步可以感染多个节点的复杂路由。
+
+
+
+\section{分析与证明}
+首先考虑确定性的路由算法，在本节的最后，我们会证明本章的下界对于随机的路由算法依然成立。
+首先给出$\alpha = 2$时路由时间的证明。
+
+设$S_0, S_1,\cdots, S_{\ell}$为在路由过程中已感染节点集合的序列，$S_i$ 是在时间步骤$i$时感染节点的集合。
+初始种子节点为$\{s_0^1,s_0^2\}$，因此$S_0 = \{s_0^1,s_0^2\}$。
+在时间步骤$i \geq 1$，我们从$E(S_{i-1})$中选择节点$s_{i}$来感染，则$S_i$和$s_i$的关系为$S_i = \{s_0^1,s_0^2,s_1,\cdots,s_{i}\}$，
+由于$t$最后被感染了，$s_{\ell}=t$是最后一个被加入集合$S_{\ell}$的节点。
+定义距离$d_i = d(S_i \cup E(S_i),t)$，这里$d(S,u)$是指集合$S$中的节点到$u$的最小曼哈顿距离。
+显然$d_i$是非递增序列，而且$d_{\ell-1} = d_{\ell}= 0$。
+为了方便，本文把$s_0^2$写作$s_0$，这样可以说$s_i$ 是在第 $i$步被感染的节点。
+然后定义$d_{-1} = |s_0^1t| = \sqrt{n}$因为$|s_0^1t| = n^{1/2}$。
+设事件$\chi$为$\chi = \{\forall~0 \leq i < cn^{\frac{1}{4}}, d_{i-1}-d_{i}\leq n^{\frac{1}{4}}\}$，此处$c<1$是一个稍后会定义的常数。
+$\chi$是指从复杂路由的第$0$步到$cn^{1/4}-1$步，当前已感染的节点集合到目标$t$的距离每一步最多减少$n^{\frac{1}{4}}$。
+接下来本文会证明当Kleinberg小世界模型的参数$\alpha = 2$时，$\Pr(\chi)$是一个很高的概率，
+
+
+
+\begin{lemma}
+\label{lem:routing}
+对于$\alpha = 2$的有向Kleinberg小世界网络，给定种子节点$\{s_0^1,s_0^2\}$和最远的目标$t$（$|s_0^1t| = \sqrt{n}$），
+存在一个常数$c \in (0,1)$，在分散式的$2$-复杂路由的过程中有
+$$\Pr(\forall~0 \leq i < cn^{\frac{1}{4}}, d_{i-1}-d_{i}\leq n^{\frac{1}{4}})\geq 1-O(\frac{1}{\log n}).$$
+\end{lemma}
+
+\begin{proof}
+%For any time step $i \geq 1$, if $d_{i-1}-d_{i}> n^{1/4}$, the gap between $d_{i-1}$ and $d_{i}$ is caused by the adding of node $s_{i}$.
+令$u_{i}$为当前已感染节点结合和暴露的节点中距离目标$t$最近的节点，即
+$$u_{i} = \arg\min_x \{ d(x,t) | x\in S_i \cup E(S_{i}) \}$$
+结合$d_i$的定义，可以知道$d_i = |u_{i}t|$。
+因为$u_{i-1}$是集合$E(S_{i-1}) \cup S_{i-1}$ 与目标$t$曼哈顿距离最小的节点，而$s_i$是从第$i-1$步的暴露集合中选择的$s_i \in E(S_{i-1})$，
+所以可以得到关曼哈顿距离$|s_{i}t|$的不等式$|s_{i}t| \geq |u_{i-1}t| = d_{i-1}$。
+因此如果$d_{i-1}-d_{i}> 0$，那么$u_{i}$必然不是$s_i$因为$s_i$到目标$t$的曼哈顿距离大于$d_{i-1}$。
+此外，还可以得知$u_i \in E(S_i) - E(S_{i-1})$（$u_i$是在第$i$步刚刚变为暴露状态的节点）
+，同时是$s_i$在第$i$步变成了感染状态导致$u_i$变成暴露状态（$u_i$恰好在第$i$步被暴露，这正是因为$s_i$被感染了）。
+结合$d_i$的定义$|u_{i}t| = d_{i}$，可得$|s_{i}u_{i}| \geq |s_{i}t| - |u_{i}t| = d_{i-1}-d_{i}$。
+所以有了下面的结论。
+
+如果在第$i \geq 1$步有$d_{i-1}-d_{i}> n^{1/4}$，则
+\vspace{0.2cm}
+\begin{enumerate}[itemindent=2em] 
+\item $|s_{i}u_{i}| > n^{\frac{1}{4}}$。
+\item $u_i$是$s_i$发出的有向边的终点， 实际上$s_i$ 发出了一条指向 $u_i$的弱连接（$|s_{i}u_{i}|$比较大，两点之间只能为弱连接）。
+\item $u_i$恰好在第$i$步变为暴露状态， 因此集合 $S_{i} - \{s_i\}$ 中恰好存在一条弱连接指向 $u_i$。
+\end{enumerate}
+对于$i=0$的情况因为$d(S_0,t) = d_{-1}$，所以是$u_0 \in E(S_0)$引起了$d_{-1}$ 和$d_0$之间的差距，此处的结论依然成立。
+
+本文称那些被集合$S_{i} - \{s_i\}$发出弱连接指向的节点集合为$X_i$。
+很显然根据上面的第3条推论$u_i \in X_i$。
+如果在第$i$步的确有$d_{i-1}-d_{i}> n^{\frac{1}{4}}$，即$d_i$的值出现了突变，那么$u_i$一定被$s_i$发出的一条长度至少为$n^{\frac{1}{4}}$的弱连接指向。
+由布尔不等式，得到
+\begin{equation}
+\begin{array}{ll}
+& 1- \Pr(\forall~0 \leq i < cn^{\frac{1}{4}}, d_{i-1}-d_{i}\leq n^{\frac{1}{4}})\\
+= & \Pr(\exists~0 \leq i < cn^{\frac{1}{4}}, d_{i-1}-d_{i}> n^{\frac{1}{4}}) \\
+\leq & \sum_{i=0}^{cn^{\frac{1}{4}}-1}\Pr(d_{i-1}-d_{i}> n^{\frac{1}{4}}) \\
+\leq & \sum_{i=0}^{cn^{\frac{1}{4}}-1}\Pr(s_i \to u_i , |s_iu_i| > n^{\frac{1}{4}} , u_i \in X_i) \\
+\leq & \sum_{i=0}^{cn^{\frac{1}{4}}-1}\Pr(\exists~x \in X_i, s_i \to x, |s_ix| > n^{\frac{1}{4}}).
+\end{array}
+\label{eq:routing}
+\end{equation}
+
+因为集合$S_{i} - \{s_i\}$中有$i+1$个节点，所以也就发出了$2(i+1)$条弱连接。
+这意味着最多有$2(i+1)$个节点满足被$S_{i} - \{s_i\}$通过弱连接指向的条件，集合$|X_i|$的大小满足$|X_i| \leq 2(i+1)$。
+用$\mathcal{H}_{i}\subseteq 2^{V}$表示所有的节点个数不超过$2(i+1)$的结合集合，下一步中固定住$X_i$ 和 $s_i$的随机性，得到如下不等式
+\begin{equation*}
+\begin{array}{ll}
+& \Pr(\exists~x \in X_i, s_i \to x, |s_ix| > n^{\frac{1}{4}})\\
+\leq & \sum_{C \in \mathcal{H}_{i}} \sum_{v \in V} \Pr \big( (X_i=C) \land  (s_i=v)
+\land (\exists~x \in C, v \to x, |vx| > n^{\frac{1}{4}}) \big)\\
+= & \sum_{C \in \mathcal{H}_{i}} \sum_{v \in V} \Pr \big( (X_i=C) \land  (s_i=v) \big)
+\Pr(\exists~x \in C, v \to x, |vx| > n^{\frac{1}{4}})\\
+\leq & \sum_{C \in \mathcal{H}_{i}} \sum_{v \in V} \Pr \big( (X_i=C) \land  (s_i=v) \big)
+\sum_{x \in C} \Pr(v \to x, |vx| > n^{\frac{1}{4}})\\
+\leq & \sum_{C \in \mathcal{H}_{i}} \sum_{v \in V} \Pr \big( (X_i=C) \land  (s_i=v) \big) \cdot
+|C| \cdot 2\mathcal{Z}\frac{1}{n^{2\cdot 1/4}}\\
+= &  2(i+1) \cdot \frac{\mathcal{Z}}{ n^{1/2}} \sum_{C \in \mathcal{H}_{i}} \sum_{v \in V}
+\Pr \big( (X_i=C) \land  (s_i=v) \big) \\
+= & 2(i+1) \cdot \frac{\mathcal{Z}}{ n^{1/2}}.
+\end{array}
+\end{equation*}
+由分散式路由的性质可以知道，事件$\{(X_i=C) \land (s_i = v)\}$仅依赖于$S_{i}-\{s_i\}$和集合$S_{i}-\{s_i\}$发出的弱连接。
+因为节点$v$不属于集合$S_{i}-\{s_i\}$，而事件$\{\exists x \in C, v \to x, |vx| > n^{\frac{1}{4}} \}$又仅与固定节点$v$发出的弱连接相关。
+因此事件$\{(X_i=C) \land (s_i = v) \}$和事件$\{ \exists x \in C, v \to x, |vx| > n^{\frac{1}{4}} \}$互相独立，
+这就是公式第三行等号的来源。
+对于节点$x$，如果$|vx| \leq n^{\frac{1}{4}}$，那么概率$\Pr(v \to x, |vx| > n^{\frac{1}{4}})$显然为$0$；
+否则的话，$\Pr(v \to x, |vx| > n^{\frac{1}{4}}) \leq 2p(v,x) \leq 2\mathcal{Z}\frac{1}{ n^{2\cdot 1/4}}$.
+这是公式第四行到第五行“$\leq$”的原因。
+把这个不等式带入引理的不等式(\ref{eq:routing})中:
+\begin{equation*}
+\begin{array}{ll}
+& 1- \Pr(\forall~0 \leq i < cn^{\frac{1}{4}}, d_{i-1}-d_{i}\leq n^{\frac{1}{4}})\\
+\leq & \sum_{i=0}^{cn^{\frac{1}{4}}-1}\Pr(\exists~x \in X_i, s_i \to x, |s_ix| > n^{\frac{1}{4}})\\
+\leq & \sum_{i=0}^{cn^{\frac{1}{4}}-1} 2(i+1) \cdot \frac{\mathcal{Z}}{ n^{1/2}} \\
+\leq & cn^{\frac{1}{4}} \cdot 2cn^{\frac{1}{4}} \cdot \Theta(\frac{1}{\log{n}})\frac{1}{ n^{1/2}} \\
+= & O(\frac{1}{\log n}).\\
+\end{array}
+\end{equation*}
+引理得证。
+\end{proof}
+
+由上面这条引理，不难发现当$\alpha = 2$时，路由时间有很高的概率至少为$cn^{\frac{1}{4}}$。下面给出本章给出的定理的证明。
+\begin{proof}[定理\ref{thm:routing}]
+正如引理\ref{lem:routing}所述，对于$\alpha = 2$的情况，在最初的$cn^{\frac{1}{4}}$步中，已感染节点的结合距离目标$t$在每一步最多减少$n^{\frac{1}{4}}$。
+所以在最开始的$cn^{\frac{1}{4}}$步中，目标$t$没有被感染，复杂路由会继续下去。
+以很高的概率$1-O(\frac{1}{\log n})$，为了在$\alpha=2$的Kleinberg小世界网络中感染目标节点$t$，分散式的$2$-复杂路由需要至少$cn^{\frac{1}{4}}$步。
+同时期望的路由时间为$cn^{\frac{1}{4}} \cdot (1-O(\frac{1}{\log n})) = \Omega(n^{\frac{1}{4}})$。
+
+当$\alpha\in [0,2)$时，类比于引理\ref{lem:routing}的证明方法，可以证明对于任意的比较小的$\varepsilon > 0$，
+\begin{equation*}
+\begin{array}{ll}
+& 1- \Pr(\forall~0 \leq i < cn^{\frac{1-\varepsilon}{\alpha+2}},
+d_{i-1}-d_{i}\leq 2n^{\frac{\alpha + 2\varepsilon}{2(\alpha+2)}})\\
+\leq & \sum_{i=0}^{cn^{\frac{1-\varepsilon}{\alpha+2}}-1}\Pr(\exists~x \in X_i, s_i \to x,
+|s_ix| > 2n^{\frac{\alpha + 2\varepsilon}{2(\alpha+2)}})\\
+\leq & \sum_{i=0}^{cn^{\frac{1-\varepsilon}{\alpha+2}}-1} 2(i+1) \cdot \mathcal{Z} \cdot (2n^{\frac{\alpha + 2\varepsilon}{2(\alpha+2)}})^{-\alpha} \\
+\leq & cn^{\frac{1-\varepsilon}{\alpha+2}}
+\cdot 2cn^{\frac{1-\varepsilon}{\alpha+2}} \cdot \Theta(\frac{1}{n^{1-\alpha/2}})\cdot
+O(n^{-\frac{\alpha(\alpha + 2\varepsilon)}{2(\alpha+2)}})\\
+= & O(n^{-\varepsilon}).\\
+\end{array}
+\end{equation*}
+
+此时复杂路由时间以$1-O(n^{-\varepsilon})$的概率至少为$\Omega(n^{\frac{1-\varepsilon}{\alpha+2}})$。
+通过设置$\varepsilon = 0$然后选取合适的常数$c$，可以得到有关路由复杂时间期望的结论，这里不再给出证明。
+
+当$ \alpha >2$时，我们可以像上面一样证明对于$ \alpha >2$，
+$$\Pr(\forall~0 \leq i < cn^{\frac{\alpha-2\varepsilon}{2(\alpha+2)}},
+d_{i-1}-d_{i}\leq n^{\frac{1 + \varepsilon}{\alpha+2}}) \geq 1-O(n^{-\varepsilon}).$$
+我们可以说以很高的概率$1-O(n^{-\varepsilon})$，复杂路由需要至少$cn^{\frac{\alpha-2\varepsilon}{2(\alpha+2)}}$步才能到达目标$t$。
+用类似的证明方法可以得到期望的结论。
+
+有关复杂路由时间的下界对于分散式的路由选择算法依然成立，这里本文提供了对于$\alpha = 2$情况的证明。
+
+令$\mathcal{A}$为所有的确定性分散式路由算法的集合，$\mathcal{G}$为所有可能的基于$\alpha = 2$的Kleinberg小世界网络的集合，
+$\pi$是生成的Kleinberg小世界网络在$\mathcal{G}$在上的分布。
+进一步定义$T(A,G)$为分散式路由算法$A\in \mathcal{A}$在小世界网络$G\in \mathcal{G}$上的复杂路由时间。
+因为随机算法是在确定性算法上的一个分布，我们只需要证明对于任意的在确定性算法集合$\mathcal{A}$上的分布$\mu$，
+\begin{equation}\label{eq:randomized_alg1}
+\Pr_{G\sim \pi}(\mathbb{E}_{A\sim \mu}(T(A,G))=\Omega(n^{1/4}))=1-O(\frac{1}{\log{n}}).
+\end{equation} 
+这里的概率是相对于$G$遵从的分布$\pi$，期望$\mathbb{E}_{A\sim \mu}(T(A,G)$是对于随机算法$A$遵从的分布$\mu$。
+
+从前面的证明可以得出
+$$
+\forall~A\in \mathcal{A},~\Pr_{G\sim \pi}(T(A,G)=\Omega(n^{1/4}))=1-O(\frac{1}{\log{n}}).
+$$
+因此存在不依赖于算法$A$的常数 $c_1,c_2>0$，有 
+$$
+\forall~A\in \mathcal{A},~\Pr_{G\sim \pi}(T(A,G)\geq c_1n^{1/4})\geq 1-\frac{c_2}{\log{n}}. 
+$$
+由于这个不等式对于任意的 $A\in \mathcal{A}$都成立，那么对于$\mathcal{A}$上的分布$\mu$
+\begin{equation}\label{eq:randomized_alg3}
+\Pr_{G\sim \pi\atop A\sim \mu}(T(A,G)\geq c_1n^{1/4})\geq 1-\frac{c_2}{\log{n}}. 
+\end{equation}
+再观察等式
+\begin{equation}\label{eq:randomized_alg2}
+\Pr_{G\sim \pi}(\mathbb{E}_{A\sim \mu}(T(A,G))\geq \frac{c_1}{2}n^{1/4})\geq 1-\frac{3c_2}{\log{n}},
+\end{equation}
+这是等式(\ref{eq:randomized_alg1})的等价版本。 
+下面用反证法证明，假设等式(\ref{eq:randomized_alg2})不成立，那么
+$$
+\Pr_{G\sim \pi}(\mathbb{E}_{A\sim \mu}(T(A,G))< \frac{c_1}{2}n^{1/4})\geq \frac{3c_2}{\log{n}}.
+$$
+令$\mathcal{G}_1\subseteq \mathcal{G}$ 为满足 $\mathbb{E}_{A\sim \mu}(T(A,G))< \frac{c_1}{2}n^{1/4}$的所有小世界网络$G$的集合，
+于是可以得到 $\Pr_{G\sim \pi}(G\in \mathcal{G}_1)\geq \frac{3c_2}{\log{n}}$。
+对于任意固定的小世界网络 $G\in \mathcal{G}_1$，由马尔可夫不等式
+（Markov's inequality~$\Pr(|X|\geq a) \leq \frac{E(|X|)}{a}$）可得
+$$\forall~G\in \mathcal{G}_1,\Pr_{A\sim\mu}(T(A,G)\geq c_1n^{1/4})\leq \frac{\mathbb{E}_{A\sim\mu}(T(A,G))}{c_1n^{1/4}}<\frac{1}{2}.$$
+因此对于任意的$\mathcal{G}_1$中的元素$G$，$\Pr_{A\sim\mu}(T(A,G)< c_1n^{1/4})\geq 1/2$ 都成立，而 $\mathcal{G}_1$的元素出现的概率至少为$\frac{1}{2}$。
+$$\Pr_{A\sim\mu\atop G\sim \pi}(T(A,G)< c_1n^{1/4})\geq \frac{1}{2}\cdot \frac{3c_2}{\log{n}}=\frac{1.5c_2}{\log{n}},$$
+这与不等式(\ref{eq:randomized_alg3})相矛盾，假设不成立，
+等式(\ref{eq:randomized_alg2})和等式(\ref{eq:randomized_alg1})成立。
+因此在$\alpha=2$时，对于任意的随机路由算法$A\sim \mu$，期望的复杂路由时间均有$\Omega(n^{1/4})$的下界。
+\end{proof}
+
+
+
+\section{讨论和扩展}
+用上一节的方法，可以得到$k$-复杂路由相同的下界。
+为了保证复杂路由能够找到目标，需要设置Kleinberg小世界网络的参数为$p = q = k$，
+同时种子节点的个数为$k$。
+因为结果和$2$-复杂路由一样，这里就不在列出定理。
+
+
+接下来本文把结果扩展到每一步允许感染多个（$m$个）节点的复杂路由。
+当$m=1$时，这正是我们前一节在定理\ref{thm:routing}讨论的复杂路由。
+当不限制$m$的大小时，复杂路由就演变为复杂传播。
+$m$可以被看作是连结复杂路由和复杂传播的变量，
+本文尝试去探索多大的$m$可以把复杂路由的时间拉低到复杂路由的水平。
+
+
+
+
+\begin{theorem}
+对于任意的分散式路由策略（算法），在$\alpha = 2$的有向Kleinberg小世界网络中，每一步可以允许感染$m$个节点的$k$-复杂路由的路由时间有很高的概率$1-O(\frac{1}{\log n})$路由时间为
+$\Omega(\frac{n^{1/4}}{m})$，期望路由时间为$\Omega(\frac{n^{1/4}}{m})$。
+\end{theorem}
+
+\begin{proof}
+设$S$为当前已感染节点的集合。
+在下一步，通过$S$发出的有向边我们最多可以感染$m$个节点。
+但是考虑一步只允许感染一个节点的复杂路由，如果一步只去感染一个节点，但是分成$m$步去感染。
+在每一步感染完成后，路由算法都会了解到新感染节点的有向边，也就是有更多的机会去感染其他节点。
+不难看出每步感染一个节点分成$m$步去感染要比一步感染$m$个节点的路由更有效率。
+因此如果每步感染一个节点的复杂路由需要$T$个时间步骤来找到目标，
+每步允许感染$m$个节点的复杂路由至少也需要$\frac{T}{m}$才能完成。
+所以每步允许感染$m$个节点的复杂路由的路由时间为
+$\frac{T}{m} \cdot (1-O(\frac{1}{\log n})) = \Omega(\frac{T}{m})$。
+证毕。
+\end{proof}
+
+从上面这个定理可以得知为了得到路由时间为$n$的多项式对数级的复杂路由，
+每一步允许感染的节点个数$m$需要很大，至少为$m = n^{\frac{1}{4}} / \log^{O(1)} n$。
+
+\section{本章小结}
+
+本章提出了Kleinberg小世界网络中复杂路由的概念，并对这一信息扩散现象进行了研究。
+首先给出最简单的复杂路由的结论并给出了完整了理论证明，
+然后把结论扩展到$k$-复杂路由，并且建立起复杂路由和复杂传播的关系，研究了每步允许感染$m$个节点的复杂路由。
+
