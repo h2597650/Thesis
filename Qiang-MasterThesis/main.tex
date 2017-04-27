@@ -1,6 +1,8 @@
 
 \documentclass[refcompress,eversion,noinfo]{ICTthesis}
 
+%\usepackage{amssymb}
+%\usepackage[thmmarks]{ntheorem}
 \usepackage{amsmath}
 \usepackage{amsthm}
 \usepackage{tabularx}
@@ -32,12 +34,19 @@
 \renewcommand{\algorithmicrequire}{\textbf{Input:}} 
 \renewcommand{\algorithmicensure}{\textbf{Output:}}
 
+%\theoremsymbol{$\square$}
+%\newtheorem*{proof}{证明}
+\theoremstyle{plain}
+%\theoremsymbol{}
+%\theoremseparator{：}
+
 \newtheorem{theorem}{定理}
 \newtheorem{lemma}{引理}
-\newtheorem{proposition}[lemma]{命题}
-\newtheorem{corollary}[theorem]{推论}
+\newtheorem{proposition}{命题}
+\newtheorem{corollary}{推论}
 \newtheorem{definition}{定义}
 
+\newcommand{\upcite}[1]{\textsuperscript{\cite{#1}}}
 
 \begin{document}
 \ICTfrontmatter
@@ -48,7 +57,8 @@
 \include{chapters/model}
 \include{chapters/inapp}
 %\include{chapters/summary}
-\ICTbackmatter{\bibliography{bib/ref}\nocite{*}}
+%\ICTbackmatter{\bibliography{bib/ref}\nocite{*}}
+\ICTbackmatter{\bibliography{bib/ref}}
 %\bibliography{bib/ref}
 %\include{chapters/thanks}
 %\include{chapters/resume}

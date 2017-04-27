@@ -201,43 +201,52 @@ P_a(v_i) = P_a(v_{i+1})(1-\varepsilon(1-P_a(v_{i+1}))) <  P_a(v_{i+1})(1-\vareps
 节点$t$被激活的概率$P_a(t) = O(2^{-d})$，随着$d$的增加趋于$0$。
 \end{proof}
 由引理\ref{lem:tree_prob}我们知道$T_\varepsilon$在输入集合大小为$1$时输出节点被激活的概率是$o(1)$，
-$T_\varepsilon$的确是一个概率与门。
+$T_\varepsilon$的确是一个两个输入节点的概率与门。
+
+
+我们已经构造了两个输入节点的树状机关，我们拓展机关$T_\varepsilon$来得到$n$个输入节点的与门$T_\varepsilon^n$。
+给定$n$个输入节点$s_1, s_2, \dots, s_n$，我们用节点$s_0$和$s_1$作为输入节点搭建$T_\varepsilon^n$，并令输出节点为$s_{12}$。
+接下来可以把节点$s_{12}$和$s_{3}$作为输入节点搭建$T_\varepsilon^n$得到输出节点$s_{123}$。
+以此类推，我们得到最终的输出节点$s_{12\dots n}$。
+在这个结构中，$s_1, s_2, \dots, s_n$中有节点未被激活时，$s_{12\dots n}$很大概率不会被激活。
+如果所有的$T_\varepsilon$都表现出与门的性质，那么整体上就构成了一个$n$个输入节点的概率与门。
+由引理\ref{lem:tree_prob}可得深度为$d$的$T_\varepsilon$最多以$(\frac{2-\varepsilon}{2})^{d}$的概率打破与门的规则。
+通过Union Bound，$T_\varepsilon^n$在输入中有未激活节点时输出节点被激活的概率至多为$n(\frac{2-\varepsilon}{2})^{d}$。
+$T_\varepsilon^n$一共包含$n\times(2^d-1) = n2^d-n$个节点。
+
+
+
+
 
 先说m们，然后下一节说sketch
 We then construct a multi-input probabilistic-AND gate based on our probabilistic-AND gate by the similar method to construct multi-input-AND gate based on 2-input-AND gate. Finally, we show if influence maximization problem can be approximated beyond the ratio shown above, we can solve the set cover problem in polynomial time. The main idea is as follows. For any set cover instance, we will put all elements to be the input of our multi-input-probabilistic-AND gate, and connect the output with a large number of additional nodes. Thus, if $k$ sets can cover all elements, all of those addition nodes will be activated, on contrast, if one of the elements cannot be covered, almost all of the additional nodes will remain inactivated.
 
 \subsection{基于Set Cover的不可近似性规约}
 在本节基于概率与门，我们证明定理\ref{the:inapp}。
+前面一节基于二叉树级联得到的2-输入概率与门$T_\varepsilon$，我们构造了$n$个输入的概率与门$T_\varepsilon^n$。
+在接下来的证明中，我们说明如果$\varepsilon$-次模逼近网络中影响力最大化算法可以取得超过给定的近似比，那么Set Cover问题就可以在多项式时间内被解决。
+证明的整体思路是对于集合覆盖的一个实例，我们构造一个网络。网络中代表元素的点是$T_\varepsilon^n$的输入，
+然后把$T_\varepsilon^n$的输出点连接到数量很大的额外节点。
+因此，当$k$个集合可以覆盖住所有元素时，额外节点都会被激活。否则，$T_\varepsilon^n$的输出大概率不会被激活，额外节点都未被激活。
 \begin{proof}[定理\ref{the:inapp}]
-We have described the construction of gadget $T_\varepsilon$, we can further construct $m$-input trees
-$T_\varepsilon^m$ with gadget $T_\varepsilon$ --- a multi input AND gate.
-Given $n$ input nodes $s_1, s_2, \dots, s_n$,
-we can use $s_0$ and $s_1$ as input nodes of $T_\varepsilon$ and set output node as $s_{12}$.
-And then combine $s_{12}$ and $s_{3}$ with gadget $T_\varepsilon$ to obtain output $s_{123}$.
-Finally we obtain ultimate output node $s_{12\dots n}$.
-We can say that $s_{12\dots n}$ can be activated only when all the nodes $s_1, s_2, \dots, s_n$ are activated,
-if for all $T_\varepsilon$ node $t$ will not become activated when not all its input nodes are activated,
-We calculate the probability that $T_\varepsilon^n$ is an AND gate.
-Since each $T_\varepsilon$ is a binary tree with depth $d$,
-each $T_\varepsilon$ breaks the AND gate rule with probability at most $(\frac{2-\varepsilon}{2})^{d}$.
-With Union Bound, we can say that $T_\varepsilon^m$ is an AND gate with probability at least $1-n(\frac{2-\varepsilon}{2})^{d}$.
-Besides, a $T_\varepsilon^n$ have $n\times(2^d-1) = n2^d-n$ nodes.
+我们考虑一个基于集合覆盖构建出的图，在这个网络中影响力最大化算法的近似比不能超过给定的值，否则集合覆盖问题就将被解决，这就导致矛盾。
+令$e_1, e_2, \dots, e_n$为表示集合覆盖实例中$n$个元素的节点，$s_1, s_2, \dots, s_m$为表示$m$个集合的节点。
+我们可以假定$m<n$，因为当$m\geq n$时，我们可以添加$m$个冗余节点（dummy nodes），他们分别被$m$个集合覆盖。
+原始的集合覆盖有$k$个集合的解时，新的集合覆盖问题就有$m+k$个集合的解。
+集合节点$s_i$会持有指向所有它覆盖元素节点的有向边，而且所有元素节点$e_j$的阈值函数是$f_{e_j}(1)=1$。
+也就是说只要覆盖$e_j$的集合节点中至少有一个被激活，$e_j$就会被激活。
+接下来们增加$n^\alpha$个与门节点$x_1, x_2, \dots, x_{n^\alpha}$，$\alpha$的值在后文确定。
+在节点$x_k$和元素节点$e_1, e_2, \dots, e_n$之间插入$n$输入概率与门$T_\varepsilon^n$，$x_k$是输出节点，如图\ref{}所示。
 
-We consider a variant of set cover problems and show that if influence maximization problem can be approximated beyond the ratio shown above,
-then we can solve the set cover problem.
-Let $e_1, e_2, \dots, e_n$ denote the nodes corresponding to the $n$ elements.
-Let $s_1, s_2, \dots, s_m$ denote the nodes corresponding to the $m$ sets.
-We can assume that $m<n$.
-When $m\geq n$ we could add $m$ dummy nodes that contained by all $m$ sets,
-the solution of the newly created graph is the same with original graph.
-Each set node $s_i$ holds a directed edge towards the element nodes it covers
-and each element node $e_i$ has threshold function with $f_{e_i}(1)=1$,
-which means that $e_i$ becomes activated when at least one of the nodes corresponding to to sets covering it is activated.
-We further add $n^\alpha$ nodes named $x_1, x_2, \dots, x_{n^\alpha}$, where $\alpha$ is a large positive constant.
-Each node $x_i$ is the output of a $T_\varepsilon^n$ and $e_1, e_2, \dots, e_n$ are the input nodes.
-Besides, for a large positive constant $\alpha$,
-we add $n^\beta$ children $c_1, c_2, \dots, c_{n^\beta}$ for each node $x_i$.
-Each child node $c_i$ also has threshold function with $f_{c_i}(1)=1$.
+然后对于参数$\alpha$，我们对每一个与门节点$x_k$添加$n^\alpha$个冗余节点$c_1, c_2, \dots, c_{n^\beta}$。
+对每个冗余节点$c_l$，阈值函数同样是$f_{c_l}(1)=1$。
+构建好的图中有集合节点$s_i$，元素节点$e_j$，与门节点$x_k$，冗余节点$c_l$以及构成概率与门的节点。
+除了构成概率与门的节点阈值函数是等式\ref{eq:func_g}定义的$\varepsilon$-次模毕竟函数，其余节点的阈值函数都是次模函数。
+
+
+
+
+
 Here we calculate the depth of $T_\varepsilon$ in order to make sure that the $n^\alpha$ $T_\varepsilon^n$ are all AND gate with high probability.
 Again we apply Union Bound to calculate the probability upper bound of at least one $T_\varepsilon^n$ fails
 --- $n^{1+\alpha}(\frac{2-\varepsilon}{2})^{d}$.
