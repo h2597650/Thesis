@@ -224,7 +224,7 @@ $T_\varepsilon^n$一共包含$n\times(2^d-1) = n2^d-n$个节点。
 证明的整体思路是对于集合覆盖的一个实例，我们构造一个网络。网络中代表元素的点是$T_\varepsilon^n$的输入，
 然后把$T_\varepsilon^n$的输出点连接到数量很大的额外节点。
 因此，当$k$个集合可以覆盖住所有元素时，额外节点都会被激活。否则，$T_\varepsilon^n$的输出大概率不会被激活，额外节点都未被激活。
-\begin{proof}[定理\ref{the:inapp}]
+\begin{proof}[定理\ref{the:inapp}证明]
 我们考虑一个基于集合覆盖构建出的图，在这个网络中影响力最大化算法的近似比不能超过给定的值，否则集合覆盖问题就将被解决，这就导致矛盾。
 令$e_1, e_2, \dots, e_n$为表示集合覆盖实例中$n$个元素的节点，$s_1, s_2, \dots, s_m$为表示$m$个集合的节点。
 我们可以假定$m<n$，因为当$m\geq n$时，我们可以添加$m$个冗余节点（dummy nodes），他们分别被$m$个集合覆盖。
@@ -301,38 +301,47 @@ $\gamma$的取值范围是$(0,1)$，也就是对于任意比例的$\varepsilon$-
 然后把非次模节点的阈值函数限定为$\varepsilon$-次模逼近并进一步提升了算法效果。
 
 
+\subsection{非次模节点较少图的近似算法}
+对于有$\ell (\ell<k)$个非次模节点的图，我们提供如下的近似算法。
+\begin{algorithm}[h]
+	\caption{\textbf{Naive-Greedy(G,k)}: Greedy for graph with $\ell$ non-submodular nodes.}
+	\label{alg:naive_greed} 
+	\begin{algorithmic}[1]
+		\Require $G$: social graph of general threshold model, $k$: budget of seeds.
+		\Ensure selected seed set $S$.
+		\State Initialize $S = \emptyset$
+		\ForAll { non-submodular node $v$}
+			\State $S = S \cup \{v\}$
+		\EndFor
+		\For {$i=1$ to $k - \ell$}
+			\State $v = \mathrm{argmax}_{u \in V \setminus S}$ \Call{MC-Spread}{$S \cup \{u\}, G$}
+			\State $S = S \cup \{u\}$
+		\EndFor
+		\State \Return $S$
+	\end{algorithmic} 
+\end{algorithm}
+在Algorithm\ref{alg:naive_greed}中，首先把所有的非次模节点加入种子集合，然后再依据贪心策略添加余下的$k - \ell$节点。
+接下来分析算法的性能：
 
-\subsection{Approximation Algorithm with Small Number of Non-submodular Nodes}
-In the case of $\ell (\ell<k)$ non-submodular nodes, we provide an approximate algorithm as follows. We firstly add these non-submodular nodes into the seed set. Then generate the rest of seed set by classical greedy algorithm.
+
 \begin{theorem}\label{the:naive_greedy}
-Given a graph of $n$ nodes where all nodes have submodular threshold function except $\ell < k$ nodes,
-for influence maximization of $k$ seeds
-with greedy scheme we can obtain a $(1-e^{-\frac{k-\ell}{k}})(1-\frac{1}{e})$-approximation.
+给定一个$n$个节点的图$G$，其中除了$\ell < k$个节点的阈值函数是非次模函数，其余节点的阈值函数均是次模。
+在图$G$上的影响力最大化算法Algorithm\ref{alg:naive_greed}可以取得$(1-e^{-\frac{k-\ell}{k}})(1-\frac{1}{e})$的近似比。
 \end{theorem}
 \begin{proof}
-Assuming that $S^*$ is the optimal set that maximizes the expectation of influenced nodes,
-$V_e$ are the set of $\ell$ nodes with non-submodular threshold function.
-let $S^*_{V_e} = S^* \cup V_e$.
-Apparently, $\sigma(S^*_{V_e}) \geq \sigma(S^*)$ since $\sigma(\cdot)$ is monotone.
-Since nodes in $V_e$ have non-submodular threshold functions, so we can not directly apply greedy scheme to find the seeds set.
-But we can first add $V_e$ to the seed set and
-therefore the influence function $\sigma(S\cup V_e)$ is submodular when $S \subseteq V-V_e$.
-In this case, we obtain a greedy solution $S^g_{V_e,k}$ with adding extra $k$ nodes to original seed set $V_e$ with greedy scheme.
-Greedy solution has the approximation ratio $1-\frac{1}{e}$, so we have $\sigma(S^g_{V_e,k}) \geq (1-\frac{1}{e})\sigma(S^*_{V_e})$ .
-Repeatedly utilizing the submodularity of $\sigma(\cdot)$,
-we obtain that $\sigma(S^g_{V_e,k-\ell})
-\geq (1-e^{-\frac{k-\ell}{k}}) \sigma(S^*)$ (see Appendix~\ref{app:e_submodular_app} for detail).
-Hence we can first add all nodes without submodular threshold function to initial seeds set and then apply greedy scheme to obtain a solution with theoretical approximation ratio.
-The theorem follows.
-\end{proof}
+假设$S^*$是图$G$影响力最大化的最优种子集合，$V_e$是$\ell$个阈值函数非次模的节点集合，
+令$S^*_{V_e} = S^* \cup V_e$。
+很显然，由于影响力函数$\sigma(\cdot)$是单调非减的$\sigma(S^*_{V_e}) \geq \sigma(S^*)$。
+由于$V_e$中的节点阈值函数是非次模的，所以我们不能直接应用贪心策略去做。
+但是把$V_e$加入到种子节点后，函数$\sigma(S\cup V_e)$对于输入$S \subseteq V-V_e$来说是满足次模性质的。
 
-\section{Proof in Theorem~\ref{the:naive_greedy}}\label{app:e_submodular_app}
-\begin{proof}
-We assume that $S^*_{V_e}=V_e \cup \{s_1,s_2,\dots,s_{k'}\}, k'\leq k$, $S_i = \{s_1,s_2,\dots,s_i\}$,
-where $s_i \not\in V_e$.
-Indeed, according to the proof of approximation ratio of $1-1/e$,
-for $i\leq k$we have
-\begin{equation*}
+通过预先把$V_e$中的节点加入种子集合，然后再通过贪心策略添加$k$个种子得到一个大小为$k+\ell$的种子集合$S^g_{V_e,k}$。
+贪心策略有$1-\frac{1}{e}$的近似比，所以$\sigma(S^g_{V_e,k}) \geq (1-\frac{1}{e})\sigma(S^*_{V_e})$。
+我们假设$S^*_{V_e}=V_e \cup \{s_1,s_2,\dots,s_{k'}\}, k'\leq k$, 其中$s_i \not\in V_e$是不属于$V_e$的节点。
+令$S_i = \{s_1,s_2,\dots,s_i\}$。
+实际上，根据$1-1/e$近似比的证明过程，对于$i\leq k$我们有：
+\begin{equation}
+\label{eq:1e_proof}
 \begin{array}{ll}
 &\sigma(S^*_{V_e})\\
 \leq & \sigma(S^*_{V_e} \cup S^g_{V_e,i})\\
@@ -345,13 +354,14 @@ for $i\leq k$we have
 \leq & \sigma(S^g_{V_e,i}) +
 	k\cdot \big( \sigma(S^g_{V_e,i+1})-\sigma(S^g_{V_e,i})\big)\\
 \end{array}
-\end{equation*}
-The first line follows from monotonicity of $\sigma$,
-third line follows from the submodularity of $\sigma$,
-forth line holds because $S^g_{V_e,i+1}$ is built greedily from
-$S^g_{V_e,i}$ in order to maximize marginal benefit.
-Hence
+\end{equation}
+不等式\ref{eq:1e_proof}的第一行是因为影响力函数$\sigma$是单调非减的，
+第三行是因为$\sigma$是次模函数。
+不等式\ref{eq:1e_proof}第四行成立的原因是$S^g_{V_e,i+1}$是基于贪心算法
+在$S^g_{V_e,i}$的基础上选出的边际影响力最大的节点，边际影响力要大于节点$s_{i+1}$。
+然后我们可以得到：
 \begin{equation*}
+\label{eq:sub_greedy_re}
 \begin{array}{ll}
 \sigma(S^*_{V_e}) - \sigma(S^g_{V_e,i}) \leq
 k\cdot \big( \sigma(S^g_{V_e,i+1})-\sigma(S^g_{V_e,i})\big) \\
@@ -359,26 +369,154 @@ k\cdot \big( \sigma(S^g_{V_e,i+1})-\sigma(S^g_{V_e,i})\big) \\
 (1-\frac{1}{k}) \big( \sigma(S^*_{V_e}) - \sigma(S^g_{V_e,i}) \big)
 \end{array}
 \end{equation*}
-
-When we apply greedy scheme for $k-\ell$ steps,
+如果只使用贪心策略选择$k-\ell$个节点的话，
 \begin{equation*}
 \begin{array}{ll}
-\sigma(S^*_{V_e}) - \sigma(S^g_{V_e,k-\ell})
-&\leq (1-\frac{1}{k})^{k-\ell} (\sigma(S^*_{V_e}) - \sigma(V_e))\\
-&\leq (1-\frac{1}{k})^{k-\ell} \sigma(S^*_{V_e})
+& \sigma(S^*_{V_e}) - \sigma(S^g_{V_e,k-\ell}) \\
+\leq & (1-\frac{1}{k})^{k-\ell} (\sigma(S^*_{V_e}) - \sigma(V_e))\\
+\leq & (1-\frac{1}{k})^{k-\ell} \sigma(S^*_{V_e})
 \end{array}
 \end{equation*}
+公司的第二行是重复使用不等式\ref{eq:sub_greedy_re}。
+所以在种子集合加入$V_e$后再选择$k-\ell$个种子的情况下，
 $$\sigma(S^g_{V_e,k-\ell})
 \geq (1-(1-\frac{1}{k})^{k-\ell}) \sigma(S^*_{V_e})
 \geq (1-e^{-\frac{k-\ell}{k}}) \sigma(S^*)$$
 
-$(1-e^{-\frac{k-\ell}{k}})$ is concave in range $[0,k]$,
-so we can easily induce that $(1-e^{-\frac{k-\ell}{k}}) \geq \frac{k-\ell}{k}(1-\frac{1}{e})$.
+所以先把非次模节点加入种子集合，然后再贪心的选择$k-\ell$个种子节点，依然可以得到一个近似比$(1-e^{-\frac{k-\ell}{k}})$的解，定理证明完毕。
 \end{proof}
+
+Algorithm\ref{alg:naive_greed}有一定局限性，非次模节点个数不能太多，不能超过给定的$k$。
+然后算法也只能粗暴的把非次模节点加入种子集合来保证次模性质，非次模节点个数较多时算法近似比很差。
+同时算法对于非次模节点的阈值函数没有限制，在阈值函数是$\varepsilon$-次模时不能提升效果。
+
+\subsection{基于次模上下界的近似算法}
+在前一小节，本文提供了一个简单的针对图中有$\ell~(\ell<k)$个非次模节点的影响力最大化近似算法。
+在本节，我们考虑非次模函数是$\varepsilon$-次模逼近函数的情况，提供了一个基于$\varepsilon$-次模逼近图的近似算法，并证明了算法的近似比。
+整体思路是概率空间的映射。
+
+在定义\ref{def:eas}中，我们定义了$\varepsilon$-次模逼近函数$f_v$的次模上界函数$\overline{f}_v$和次模下界函数$\underline{f}_v$。
+注意到次模函数也是$\varepsilon$-次模逼近，对次模函数$f_v$来说，$\underline{f}_v = f = (1-\varepsilon)\overline{f}_v$。
+根据定义，可以推出对于任意的输入$\underline{f}_v \geq (1-\varepsilon)\overline{f}_v$。
+给定一个包含$\varepsilon$-次模逼近节点的图，我们可以把每个节点的阈值函数替换成次模下界函数，
+然后在新构建的图上运行经典的基于次模的影响力最大化算法（Algorithm~\ref{alg:Galg_L}）。
+下面的定理证明了这种贪心算法的近似比。
+
+\begin{algorithm}[h]
+	\caption{\textbf{Galg-L($G,k,\mathcal{A},\{\overline{f}_v\},\{\underline{f}_v\}$)}: algorithm for zoomed threshold model.}
+	\label{alg:Galg_L} 
+	\begin{algorithmic}[1]
+		\Require $G$: social graph, $k$: budget of seeds, $\mathcal{A}$: greedy IM algorithm, 
+			$\{\overline{f}_v\},\{\underline{f}_v\}$: submodular upper and lower function.
+		\Ensure selected seed set $S$.
+		\State Initialize $S = \emptyset$
+		\State replace each nodes $v$'s threshold function $f_v$ with $\underline{f}_v$
+		\State run greedy algorithm $\mathcal{A}$ on $G$ with $\{\underline{f}_v\}$ and obtain $S$
+		\State \Return $S$
+	\end{algorithmic} 
+\end{algorithm}
+
+
+\begin{theorem}
+\label{thm:app_alg}
+给定通用阈值模型的一个图$G$，
+如果图中只有$c$个节点的阈值函数是$\varepsilon$-次模逼近而其余节点的阈值函数均是次模，
+那么算法{\bf Galg-L}可以输出近似比为$(1-\frac{1}{e})(1-\varepsilon)^c$的种子集合。
+\end{theorem}
+\begin{proof}
+令$V_e$为$\varepsilon$-次模逼近节点的集合。
+不失一般性，我们可以假设$V_e = \{v_1,v_2,\dots,v_c\}$。
+现在考虑这两个阈值函数均为次模函数的图$\overline{G}, \underline{G}$，它们的节点和图$G$一致.
+这两个图中每个节点$v$的阈值函数分别是$\overline{f}_v$和$\underline{f}_v$。
+图$G$、$\overline{G}$和$\underline{G}$中，$V-V_e$内的节点阈值函数相同，
+$V_e$内节点的阈值函数分别为$\varepsilon$-次模逼近、次模上界和次模下界函数。
+
+对于通用阈值模型来说，如果每个节点$v$的阈值$\theta_v$都被确定了，传播过程就变成了确定性的。
+一个阈值函数为$\{f_v\}$的图$G$和给定的节点阈值$\{\theta_v\}$被称为{\it 可能世界图}（possible world），
+这和独立级联模型的活边子图（live-edge graph）很类似。
+一个可能世界图可以被表示为
+$$\{\theta_{v_1},\theta_{v_2},\dots,\theta_{v_n};f_{v_1},f_{v_2},\dots,f_{v_n}\}$$
+分别是每个节点的阈值和阈值函数。
+这里我们通过$\theta_{v}\leq 1-\varepsilon (v\in V_e)$构建$\underline{G}$和$\overline{G}$之间可能世界图的一一映射。
+
+\begin{equation}
+\label{eq:possible_world}
+\begin{array}{ll}
+\{\theta_{v_1},\dots,\theta_{v_c},\theta_{v_{c+1}}\dots,\theta_{v_n};
+f_{v_1}, \dots,f_{v_n}\} \leftrightarrow \\
+\{\frac{\theta_{v_1}}{1-\varepsilon},\dots,\frac{\theta_{v_1}}{1-\varepsilon},\theta_{v_{c+1}}\dots,\theta_{v_n};
+\frac{f_{v_1}}{1-\varepsilon},\dots,\frac{f_{v_c}}{1-\varepsilon},f_{v_{c+1}},\dots,f_{v_n}\} \\
+\end{array}
+\end{equation}
+
+等式\ref{eq:possible_world}描述了$\underline{G}$和$\overline{G}$的一一映射。
+给定$\underline{G}$的任意可能世界图，
+对于任意在$V_e$中的节点$v\in V_e$且阈值$\theta_{v}\leq 1-\varepsilon$，
+把阈值$\theta_{v}$放大至$\frac{\theta_{v}}{1-\varepsilon}$。
+与此同时，也把这些节点的阈值函数也放大$\frac{1}{1-\varepsilon}$倍到$\frac{f_{v}}{1-\varepsilon}$。
+显然，这个放大过程不会影响在可能世界图中的传播过程，
+但是放大之后$\underline{G}$的可能世界图变成了$\overline{G}$中的一个可能世界。
+
+期望的影响力$\sigma$可以通过对阈值积分计算：
+$$\sigma(S)=\int_{\mathbb{\theta}\in[0,1]^n} \mathcal{D}(\mathbb{\theta};f,S) \mbox{d}_{\mathbb{\theta}}$$
+$\mathcal{D}(\mathbb{\theta};f,S)$代表的是在可能世界图$(\mathbb{\theta};f)$中种子集合$S$确定的的影响力大小。
+称图$\overline{G},\underline{G}$的影响力函数分别为$\overline{\sigma},\underline{\sigma}$。
+定义$\vec{\theta}\in[0,1]^n$为$n$个节点阈值组成的$n$维向量，
+$\vec{\theta}_e \in[0,1]^{c}$和$\vec{\theta}'\in[0,1]^{n-c}$分别是集合$V_e$和$V-V_e$的阈值向量。
+类似的可以定义阈值函数向量，定义$V_e$和$V-V_e$的阈值函数向量分别为$\vec{f}_e,\vec{f}'$。
+一个可能世界图被简写为：
+$$\{\vec{\theta}_e,\vec{\theta}';\vec{f}_e,\vec{f}'\}$$
+对于任意的种子集合，可以得到：
+\begin{equation}
+\label{eq:sigma_geq}
+\begin{array}{ll}
+&\underline{\sigma}(S)\\
+=&\int_{\vec{\theta}\in[0,1]^n} \mathcal{D}(\vec{\theta};\vec{f},S) \mbox{d}_{\vec{\theta}} \\
+\geq&\int_{\vec{\theta}_e\in[0,1-\varepsilon]^c}\int_{\vec{\theta}'\in[0,1]^{n-c}} \mathcal{D}(\vec{\theta}_e,\vec{\theta}';\vec{f},S) \mbox{d}_{\vec{\theta}_e}\mbox{d}_{\vec{\theta}'} \\
+=&(1-\varepsilon)^c \int_{\frac{\vec{\theta}_e}{1-\varepsilon}\in[0,1]^c}\int_{\vec{\theta}'\in[0,1]^{n-c}} \mathcal{D}(\vec{\theta}_e,\vec{\theta}';\vec{f},S) \mbox{d}_{\frac{\vec{\theta}_e}{1-\varepsilon}}\mbox{d}_{\vec{\theta}'} \\
+=&(1-\varepsilon)^c \int_{\frac{\vec{\theta}_e}{1-\varepsilon}\in[0,1]^c}\int_{\vec{\theta}'\in[0,1]^{n-c}} \mathcal{D}(\frac{\vec{\theta}_e}{1-\varepsilon},\vec{\theta}';\frac{\vec{f}_e}{1-\varepsilon},\vec{f}',S) \mbox{d}_{\frac{\vec{\theta}_e}{1-\varepsilon}}\mbox{d}_{\vec{\theta}'} \\
+=&(1-\varepsilon)^c \int_{\vec{\theta}\in[0,1]^n} \mathcal{D}(\vec{\theta};\frac{\vec{f}_e}{1-\varepsilon},\vec{f}',S) \mbox{d}_{\vec{\theta}} \\
+=&(1-\varepsilon)^c \overline{\sigma}(S).\\
+\end{array}
+\end{equation}
+不等式\ref{eq:sigma_geq}的第三个等号利用了$\underline{G}$和$\overline{G}$可能世界图的一一映射。
+因此，给定一个种子集合$S$，在图$\overline{G}$和图$\underline{G}$中对应的影响力函数满足关系：
+$$\underline{\sigma}(S) \geq (1-\varepsilon)^c \overline{\sigma}$$
+
+
+
+称$\sigma$为原图$G$的影响力函数，令$\overline{S}^*,S^*,\underline{S}^*$分别代表
+$\overline{\sigma}, \sigma, \underline{\sigma}$的影响力最大化问题最优解。
+显然$\overline{\sigma}(\overline{S}^*) \geq \sigma(S^*)$，因为对任意节点$v$都有$\overline{f}_v \geq f_v$。
+根据前文的不等式\ref{eq:sigma_geq}，推出
+$$\underline{\sigma}(\underline{S}^*)
+\geq \underline{\sigma}(\overline{S}^*)
+\geq (1-\varepsilon)^c \overline{\sigma}(\overline{S}^*)$$
+因此对于基于$\overline{\sigma}$的贪心算法$\mathcal{A}$的输出种子集合$S^{\mathcal{A}}$，有近似比如下：
+\begin{equation*}
+\begin{array}{ll}
+\sigma(S^{\mathcal{A}})
+&\geq \underline{\sigma}(S^{\mathcal{A}})
+\geq (1-\frac{1}{e})\underline{\sigma}(\underline{S}^*)\\
+&\geq (1-\frac{1}{e})(1-\varepsilon)^c \overline{\sigma}(\overline{S}^*)
+\geq (1-\frac{1}{e})(1-\varepsilon)^c \sigma(S^*).
+\end{array}
+\end{equation*}
+至此定理证明完毕。
+\end{proof}
+
+如果Algorithm~\ref{alg:Galg_L}$\varepsilon$-次模逼近函数替换成对应的上界然后运行贪心算法，
+可以得到类似的结果，近似比也是$(1-\frac{1}{e})(1-\varepsilon)^c$，我们称这种算法为\textbf{Galg-L}。
+证明过程中用到的技巧和Lu等人\cite{lu2015competition}的{\em sandwich approximation}有些相似。
+但是他们的近似比依赖于尚未确定的影响力大小，而我们的工作利用概率空间映射直接求出了近似比的数值。
 
 
 \section{本章小结}
-
+本章主要讨论了$\varepsilon$-次模逼近网络中影响力最大化问题，
+给出了图中有$n$的多项式个$\varepsilon$-次模逼近节点时的不可近似性，
+最后分别基于贪心策略和概率空间映射策略设计了两个近似算法，各自分析了近似比。
+4.1节分析讨论了$n$个节点的图中有$n^{\gamma}$个$\varepsilon$-次模逼近节点的情况，基于机关构造从NP完全问题集合覆盖给出了不可近似性证明的规约。
+4.2节首先给出针对图中有常数个非次模节点的近似算法，然后基于$\varepsilon$-次模逼近函数的次模上下界设计了近似算法，通过概率空间映射给出近似比证明。
 
 
 

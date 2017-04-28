@@ -260,7 +260,8 @@
 %% set header
 \pagestyle{fancy}
 \fancyhf{}
-\fancyhead[CE]{{\ICT@font@st\ICT@hdr@thesistitle}}
+%\fancyhead[CE]{{\ICT@font@st\ICT@hdr@thesistitle}}
+\fancyhead[CE]{{\ICT@font@st\ICT@value@thesis@titlemark}}
 \fancyhead[CO]{{\ICT@font@st\leftmark}}
 \fancyfoot[C]{{\ICT@font@st\thepage}}
 
