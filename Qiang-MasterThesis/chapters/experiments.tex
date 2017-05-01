@@ -1,278 +1,339 @@
 % !Mode:: "TeX:UTF-8"
-\chapter{$k$-激活路由的研究}
+\chapter{实验与分析}
 
-\def \doubleto {\stackrel{ \geq 2}{\longrightarrow}}
+除了理论的分析结果，本文还关心第四章提出的贪心算法在带有非次模节点的现实中网络的效果。
+本文设计了一系列实验，对比了不同网络、不同$\varepsilon$-次模逼近节点个数和不同$\varepsilon$情况下算法的表现并分析了实验结果。
+所有的实验都是在一台$128$GB内存、2.4GHz Intel(R) Xeon(R) E5-2620 CPUs、四核$24$线程和$64$位Ubuntu 14.04.1的机器上测试。
+本文测试所有的算法都是用C++实现，用g++ 4.8.4编译。
+为了节约测试实现，部分算法通过omp多线程实现
 
-本章主要研究了在有向Kleinberg小世界网络中$k$-激活路由路由的研究，网络模型的设定和Kleinberg最初提出分散式路由时的网络模型一致\cite{Kleinberg2000small}。
-正如第三章描述的，本章考虑节点$u$只能激活自己有向边指向的节点（出邻居）的分散式路由方式。
-只有当一个节点$u$被$k$个节点发出的有向边指向时，$u$才会被变成暴露状态。
-也就是节点$u$的阈值函数只有在输入集合大小不小于$k$时才从$0$变为$1$。
-对于强连接，仍然认为它们是无向的或者双向的。
-在每一个时间步骤，我们仅有知道被激活节点和被激活节点的强连接和弱连接，而对于未激活节点的弱连接算法一无所知。
-这样可以在证明中使用延迟选择原则\cite{Motwani1995randomized}，和\cite{Kleinberg2000small}在证明分散式路由中使用的原则一样。
-这意味着节点$u$的弱连接只有在$u$被激活时才被选取，进而算法才知道$u$的弱连接。
-最初的种子节点是$k$个网格上连续的节点，如果对于Kleinberg小世界网络设置$p = q = k$，因此$k$-激活路由最终可以激活目标节点$t$。
-接下来给出$k$-激活路由的主要结论。
+\section{实验配置}
 
-\section{$k$-激活路由的结论} \label{sec:routing}
+\subsection{实验数据}
+我们在三个实际网络中执行实验。
+第一个网络是{\em Flixster}，是美国的一个电影评价社交网站。
+每个节点代表一个网站用户，用户间的边代表着用户间的关系。
+边上的概率基于主体独立级联模型\cite{barbieri2012topic}（Topic-aware Independent Cascade Model）学习到，
+从网络结构和用户间评分的顺序和影响关系基于即极大似然估计学习到边的概率。
+Barbieri等人\cite{barbieri2012topic}提供了很多主题的图中边概率，我们采用主题3的$29357$个节点和$174939$有向边。
 
-我们考虑一个$2$-激活路由的任务，起始给定一对相邻的种子节点$S_0 = \{s_0^1, s_0^2\}$（$s_0^1$ 和 $s_0^2$的曼哈顿距离为$1$），
-目标是通过分散式路由到达目标节点$t$。
-在本文中，我们讨论$t$距离种子节点最远的情况，也就是$s_0^1$与$t$的曼哈顿距离为$\Theta(\sqrt{n})$。
-从已经暴露的节点集合中选择哪个节点来激活是由路由选择算法决定的
-，一个比较特殊的路由选择策略是在已经暴露的节点中选择距离目标$t$曼哈顿距离最小的节点，这也被称为贪心路由算法。
-本章的结果对于任何分散式路由选择算法都成立，甚至是随机算法。
-下面是有关路由时间的下界的结果。
+第二个网络是{\em NetHEPT}，是arXiv (http://www.arXiv.org)网站上"High Energy Physics - Theory"主题下的学术合作网站。
+许多影响力最大化的相关工作
+\cite{Chen2009efficient,chen2010sharpphard,Goyal2011simpath,goyal2012minimizing,mtai2016sigmod}
+都用这个网络作为基准去测试算法性能。
+在{\em NetHEPT}中，每个节点代表一个作者，每条变代表着作者间曾经合作过的论文。
+边的权值代表着作者间合作论文的数量。
+{\em NetHEPT}中有$15233$个节点和$31376$条无向边。
+在试验中，我们把每一条无向边替换为两条有向边。
+在原始网络中，网络中边的值通过weight cascade model\cite{Kempe2003maximizing}设定。
+每条有向边$(u,v)$的权值为$c(u,v)/d(v)$，其中$c(u,v)$是$u$和$v$两个作者之间合作发表过的论文数，
+$d(v)$是作者$v$发表过的论文数量。
 
+为了评价算法在大型社交网络上的表现，我们采用了{\em DBLP}网络。
+{\em DBLP}网络也是一个学术关系合作网络，由Michael Ley维护着。
+{\em DBLP}比前两个网络都要大很多，网络中有$654628$个节点和$1990259$条无向边，
+是一个十万节点、百万关系的网络。
 
+几个网络数据的信息汇总如表\ref{tab:net_info}所示。
+\begin{table}[h]
+	\centering
+	\caption{网络信息汇总表}
+	\label{tab:net_info}
+	\begin{minipage}[t]{0.8\textwidth} 
+		\begin{tabular}{|c|c|c|}
+			\hline
+			网络  &  节点数   &   边数\\ \hline
+			{\em NetHEPT}  &  $15233$   &   $31376$ \\ \hline
+			{\em Flixster}  &  $29357$   &   $174939$ \\ \hline
+			{\em DBLP}   &   $654628$   &   $1990259$ \\
+			\hline
+		\end{tabular}\\[2pt]
+	\end{minipage}
+\end{table}
 
-\begin{theorem}\label{thm:routing}
-对于任意的分散式路由策略（算法），甚至是随机的策略，对于任意的比较小的$\varepsilon > 0$，在有向Kleinberg小世界网络中，$2$-激活路由的路由时间有下面
-依赖于Kleinberg小世界模型参数$\alpha$的下界：
+\subsection{传播模型}
+许多学者采用 weight cascade model\cite{Kempe2003maximizing}给边赋值影响概率，
+但是在本文我们主要研究通用阈值模型。
+我们只考虑线性阈值模型\cite{Kempe2003maximizing}，因为直接在次模的阈值函数上运行贪心算法效率很低。
+但是线性阈值模型上可以运行TIM算法，利用逆向可达集合的技术算法可以很快输出结果。
+更进一步为了构造$\varepsilon$-次模逼近函数，我们给边$(u,v)$赋值为$1/d(v)$。
+一个节点每条入边权值一样是为了保证在后面的变换后函数仍然满足单调性。
+在这个设定下，阈值函数实际上是一个线性函数$f_v(S) = |S|/d(v)$。
 
+我们根据Backstrom\cite{backstrom2006group}和杨洋\cite{yang2016role}的观测结果构造了下面两种$\varepsilon$-次模逼近函数
+\begin{description}
+\item[(1)] 幂函数$\frac{|S|}{d(v)}^{\beta}$，$\beta$根据$\frac{1}{d(v)}^{\beta}=\frac{1}{d(v)}(1-\varepsilon)$求出
+\item[(2)] $|S| \leq 2$时函数值为$\frac{|S|}{d(v)}(1-\varepsilon)$，$|S| > 2$时函数值为$\frac{|S|}{d(v)}$
+\end{description}
+第一个$\varepsilon$-次模逼近函数是一个超模函数，这个函数对应了杨洋\cite{yang2016role}在{\em Flickr}网络上观测的结果，
+如图\ref{fig:Flickr}所示。
+第二个阈值函数在输入大小不超过$2$时有一个向下的掉落，这符合Backstrom\cite{backstrom2006group}现在{\em LiveJounral}网络上的观测结果，
+如图\ref{fig:LiveJounral}所示。
+为了方便，这两个函数简记为\easso 和\easst ，函数的图像如图\ref{fig:eas12}所示。
+\begin{figure}[h]
+\centering
+	\subfigure[\easso]
+	{
+		\label{fig:eas1}
+		\includegraphics[width=0.35\textwidth]{eas1.png}
+	}
+    \subfigure[\easst]
+	{
+		\label{fig:eas2}
+		\includegraphics[width=0.35\textwidth]{eas2.png}
+	}	
+	\caption{Results of IM on {\em NetHEPT} with $\varepsilon=0.2$}
+	\label{fig:eas12}
+\end{figure}
 
-\begin{enumerate}
-\item
-当 $\alpha\in [0,2)$时， 路由时间是 $\Omega( n^{\frac{1-\varepsilon}{\alpha + 2}})$ 的概率至少为 $1-O(n^{-\varepsilon})$ 
-，期望路由时间为 $\Omega( n^{\frac{1}{\alpha + 2}})$。
-\item
-当 $\alpha = 2$时， 路由时间是 $\Omega(n^{\frac{1}{4}})$ 的概率至少为 $1-O(\frac{1}{\log n})$ 
-，期望路由时间为 $\Omega(n^{\frac{1}{4}})$。
-\item
-当 $\alpha\in (2,+\infty)$时， 路由时间是 $\Omega( n^{\frac{\alpha-2\varepsilon}{2(\alpha+2)}})$ 的概率至少为 $1-O(n^{-\varepsilon})$ 
-，期望路由时间为 $\Omega( n^{\frac{\alpha}{2(\alpha+2)}})$。
-
-\end{enumerate}
-\end{theorem}
-
-在本章的开始首先给出一些定义。
-对于一个已激活节点集合$S$，定义集合$E(S)$为被已激活节点集合$S$暴露的节点的集合，更精确的定义为
-$E(S) = \{x\notin S\ |\ S \mbox{ 有两条有向边指向 } x\}$。
-从$E(S)$的定义可以知道$k$-激活路由是沿着Kleinberg小世界网络中的有向边扩散的。
-
-在接下来的小节中，本文首先分析有向Kleinberg小世界网络中普通路由策略的的性能，
-然后把结果推广到每一步可以激活多个节点的$k$-激活路由。
-
-
-
-\section{分析与证明}
-首先考虑确定性的路由算法，在本节的最后，我们会证明本章的下界对于随机的路由算法依然成立。
-首先给出$\alpha = 2$时路由时间的证明。
-
-设$S_0, S_1,\cdots, S_{\ell}$为在路由过程中已激活节点集合的序列，$S_i$ 是在时间步骤$i$时激活节点的集合。
-初始种子节点为$\{s_0^1,s_0^2\}$，因此$S_0 = \{s_0^1,s_0^2\}$。
-在时间步骤$i \geq 1$，我们从$E(S_{i-1})$中选择节点$s_{i}$来激活，则$S_i$和$s_i$的关系为$S_i = \{s_0^1,s_0^2,s_1,\cdots,s_{i}\}$，
-由于$t$最后被激活了，$s_{\ell}=t$是最后一个被加入集合$S_{\ell}$的节点。
-定义距离$d_i = d(S_i \cup E(S_i),t)$，这里$d(S,u)$是指集合$S$中的节点到$u$的最小曼哈顿距离。
-显然$d_i$是非递增序列，而且$d_{\ell-1} = d_{\ell}= 0$。
-为了方便，本文把$s_0^2$写作$s_0$，这样可以说$s_i$ 是在第 $i$步被激活的节点。
-然后定义$d_{-1} = |s_0^1t| = \sqrt{n}$因为$|s_0^1t| = n^{1/2}$。
-设事件$\chi$为$\chi = \{\forall~0 \leq i < cn^{\frac{1}{4}}, d_{i-1}-d_{i}\leq n^{\frac{1}{4}}\}$，此处$c<1$是一个稍后会定义的常数。
-$\chi$是指从$k$-激活路由的第$0$步到$cn^{1/4}-1$步，当前已激活的节点集合到目标$t$的距离每一步最多减少$n^{\frac{1}{4}}$。
-接下来本文会证明当Kleinberg小世界模型的参数$\alpha = 2$时，$\Pr(\chi)$是一个很高的概率，
-
-
-
-\begin{lemma}
-\label{lem:routing}
-对于$\alpha = 2$的有向Kleinberg小世界网络，给定种子节点$\{s_0^1,s_0^2\}$和最远的目标$t$（$|s_0^1t| = \sqrt{n}$），
-存在一个常数$c \in (0,1)$，在分散式的$2$-$k$-激活路由的过程中有
-$$\Pr(\forall~0 \leq i < cn^{\frac{1}{4}}, d_{i-1}-d_{i}\leq n^{\frac{1}{4}})\geq 1-O(\frac{1}{\log n}).$$
-\end{lemma}
-
-\begin{proof}
-%For any time step $i \geq 1$, if $d_{i-1}-d_{i}> n^{1/4}$, the gap between $d_{i-1}$ and $d_{i}$ is caused by the adding of node $s_{i}$.
-令$u_{i}$为当前已激活节点结合和暴露的节点中距离目标$t$最近的节点，即
-$$u_{i} = \arg\min_x \{ d(x,t) | x\in S_i \cup E(S_{i}) \}$$
-结合$d_i$的定义，可以知道$d_i = |u_{i}t|$。
-因为$u_{i-1}$是集合$E(S_{i-1}) \cup S_{i-1}$ 与目标$t$曼哈顿距离最小的节点，而$s_i$是从第$i-1$步的暴露集合中选择的$s_i \in E(S_{i-1})$，
-所以可以得到关曼哈顿距离$|s_{i}t|$的不等式$|s_{i}t| \geq |u_{i-1}t| = d_{i-1}$。
-因此如果$d_{i-1}-d_{i}> 0$，那么$u_{i}$必然不是$s_i$因为$s_i$到目标$t$的曼哈顿距离大于$d_{i-1}$。
-此外，还可以得知$u_i \in E(S_i) - E(S_{i-1})$（$u_i$是在第$i$步刚刚变为暴露状态的节点）
-，同时是$s_i$在第$i$步变成了激活状态导致$u_i$变成暴露状态（$u_i$恰好在第$i$步被暴露，这正是因为$s_i$被激活了）。
-结合$d_i$的定义$|u_{i}t| = d_{i}$，可得$|s_{i}u_{i}| \geq |s_{i}t| - |u_{i}t| = d_{i-1}-d_{i}$。
-所以有了下面的结论。
-
-如果在第$i \geq 1$步有$d_{i-1}-d_{i}> n^{1/4}$，则
-\vspace{0.2cm}
-\begin{enumerate} 
-\item $|s_{i}u_{i}| > n^{\frac{1}{4}}$。
-\item $u_i$是$s_i$发出的有向边的终点， 实际上$s_i$ 发出了一条指向 $u_i$的弱连接（$|s_{i}u_{i}|$比较大，两点之间只能为弱连接）。
-\item $u_i$恰好在第$i$步变为暴露状态， 因此集合 $S_{i} - \{s_i\}$ 中恰好存在一条弱连接指向 $u_i$。
-\end{enumerate}
-对于$i=0$的情况因为$d(S_0,t) = d_{-1}$，所以是$u_0 \in E(S_0)$引起了$d_{-1}$ 和$d_0$之间的差距，此处的结论依然成立。
-
-本文称那些被集合$S_{i} - \{s_i\}$发出弱连接指向的节点集合为$X_i$。
-很显然根据上面的第3条推论$u_i \in X_i$。
-如果在第$i$步的确有$d_{i-1}-d_{i}> n^{\frac{1}{4}}$，即$d_i$的值出现了突变，那么$u_i$一定被$s_i$发出的一条长度至少为$n^{\frac{1}{4}}$的弱连接指向。
-由布尔不等式，得到
-\begin{equation}
-\begin{array}{ll}
-& 1- \Pr(\forall~0 \leq i < cn^{\frac{1}{4}}, d_{i-1}-d_{i}\leq n^{\frac{1}{4}})\\
-= & \Pr(\exists~0 \leq i < cn^{\frac{1}{4}}, d_{i-1}-d_{i}> n^{\frac{1}{4}}) \\
-\leq & \sum_{i=0}^{cn^{\frac{1}{4}}-1}\Pr(d_{i-1}-d_{i}> n^{\frac{1}{4}}) \\
-\leq & \sum_{i=0}^{cn^{\frac{1}{4}}-1}\Pr(s_i \to u_i , |s_iu_i| > n^{\frac{1}{4}} , u_i \in X_i) \\
-\leq & \sum_{i=0}^{cn^{\frac{1}{4}}-1}\Pr(\exists~x \in X_i, s_i \to x, |s_ix| > n^{\frac{1}{4}}).
-\end{array}
-\label{eq:routing}
-\end{equation}
-
-因为集合$S_{i} - \{s_i\}$中有$i+1$个节点，所以也就发出了$2(i+1)$条弱连接。
-这意味着最多有$2(i+1)$个节点满足被$S_{i} - \{s_i\}$通过弱连接指向的条件，集合$|X_i|$的大小满足$|X_i| \leq 2(i+1)$。
-用$\mathcal{H}_{i}\subseteq 2^{V}$表示所有的节点个数不超过$2(i+1)$的结合集合，下一步中固定住$X_i$ 和 $s_i$的随机性，得到如下不等式
-\begin{equation*}
-\begin{array}{ll}
-& \Pr(\exists~x \in X_i, s_i \to x, |s_ix| > n^{\frac{1}{4}})\\
-\leq & \sum_{C \in \mathcal{H}_{i}} \sum_{v \in V} \Pr \big( (X_i=C) \land  (s_i=v)
-\land (\exists~x \in C, v \to x, |vx| > n^{\frac{1}{4}}) \big)\\
-= & \sum_{C \in \mathcal{H}_{i}} \sum_{v \in V} \Pr \big( (X_i=C) \land  (s_i=v) \big)
-\Pr(\exists~x \in C, v \to x, |vx| > n^{\frac{1}{4}})\\
-\leq & \sum_{C \in \mathcal{H}_{i}} \sum_{v \in V} \Pr \big( (X_i=C) \land  (s_i=v) \big)
-\sum_{x \in C} \Pr(v \to x, |vx| > n^{\frac{1}{4}})\\
-\leq & \sum_{C \in \mathcal{H}_{i}} \sum_{v \in V} \Pr \big( (X_i=C) \land  (s_i=v) \big) \cdot
-|C| \cdot 2\mathcal{Z}\frac{1}{n^{2\cdot 1/4}}\\
-= &  2(i+1) \cdot \frac{\mathcal{Z}}{ n^{1/2}} \sum_{C \in \mathcal{H}_{i}} \sum_{v \in V}
-\Pr \big( (X_i=C) \land  (s_i=v) \big) \\
-= & 2(i+1) \cdot \frac{\mathcal{Z}}{ n^{1/2}}.
-\end{array}
-\end{equation*}
-由分散式路由的性质可以知道，事件$\{(X_i=C) \land (s_i = v)\}$仅依赖于$S_{i}-\{s_i\}$和集合$S_{i}-\{s_i\}$发出的弱连接。
-因为节点$v$不属于集合$S_{i}-\{s_i\}$，而事件$\{\exists x \in C, v \to x, |vx| > n^{\frac{1}{4}} \}$又仅与固定节点$v$发出的弱连接相关。
-因此事件$\{(X_i=C) \land (s_i = v) \}$和事件$\{ \exists x \in C, v \to x, |vx| > n^{\frac{1}{4}} \}$互相独立，
-这就是公式第三行等号的来源。
-对于节点$x$，如果$|vx| \leq n^{\frac{1}{4}}$，那么概率$\Pr(v \to x, |vx| > n^{\frac{1}{4}})$显然为$0$；
-否则的话，$\Pr(v \to x, |vx| > n^{\frac{1}{4}}) \leq 2p(v,x) \leq 2\mathcal{Z}\frac{1}{ n^{2\cdot 1/4}}$.
-这是公式第四行到第五行“$\leq$”的原因。
-把这个不等式带入引理的不等式(\ref{eq:routing})中:
-\begin{equation*}
-\begin{array}{ll}
-& 1- \Pr(\forall~0 \leq i < cn^{\frac{1}{4}}, d_{i-1}-d_{i}\leq n^{\frac{1}{4}})\\
-\leq & \sum_{i=0}^{cn^{\frac{1}{4}}-1}\Pr(\exists~x \in X_i, s_i \to x, |s_ix| > n^{\frac{1}{4}})\\
-\leq & \sum_{i=0}^{cn^{\frac{1}{4}}-1} 2(i+1) \cdot \frac{\mathcal{Z}}{ n^{1/2}} \\
-\leq & cn^{\frac{1}{4}} \cdot 2cn^{\frac{1}{4}} \cdot \Theta(\frac{1}{\log{n}})\frac{1}{ n^{1/2}} \\
-= & O(\frac{1}{\log n}).\\
-\end{array}
-\end{equation*}
-引理得证。
-\end{proof}
-
-由上面这条引理，不难发现当$\alpha = 2$时，路由时间有很高的概率至少为$cn^{\frac{1}{4}}$。下面给出本章给出的定理的证明。
-\begin{proof}[定理\ref{thm:routing}证明]
-正如引理\ref{lem:routing}所述，对于$\alpha = 2$的情况，在最初的$cn^{\frac{1}{4}}$步中，已激活节点的结合距离目标$t$在每一步最多减少$n^{\frac{1}{4}}$。
-所以在最开始的$cn^{\frac{1}{4}}$步中，目标$t$没有被激活，$k$-激活路由会继续下去。
-以很高的概率$1-O(\frac{1}{\log n})$，为了在$\alpha=2$的Kleinberg小世界网络中激活目标节点$t$，分散式的$2$-$k$-激活路由需要至少$cn^{\frac{1}{4}}$步。
-同时期望的路由时间为$cn^{\frac{1}{4}} \cdot (1-O(\frac{1}{\log n})) = \Omega(n^{\frac{1}{4}})$。
-
-当$\alpha\in [0,2)$时，类比于引理\ref{lem:routing}的证明方法，可以证明对于任意的比较小的$\varepsilon > 0$，
-\begin{equation*}
-\begin{array}{ll}
-& 1- \Pr(\forall~0 \leq i < cn^{\frac{1-\varepsilon}{\alpha+2}},
-d_{i-1}-d_{i}\leq 2n^{\frac{\alpha + 2\varepsilon}{2(\alpha+2)}})\\
-\leq & \sum_{i=0}^{cn^{\frac{1-\varepsilon}{\alpha+2}}-1}\Pr(\exists~x \in X_i, s_i \to x,
-|s_ix| > 2n^{\frac{\alpha + 2\varepsilon}{2(\alpha+2)}})\\
-\leq & \sum_{i=0}^{cn^{\frac{1-\varepsilon}{\alpha+2}}-1} 2(i+1) \cdot \mathcal{Z} \cdot (2n^{\frac{\alpha + 2\varepsilon}{2(\alpha+2)}})^{-\alpha} \\
-\leq & cn^{\frac{1-\varepsilon}{\alpha+2}}
-\cdot 2cn^{\frac{1-\varepsilon}{\alpha+2}} \cdot \Theta(\frac{1}{n^{1-\alpha/2}})\cdot
-O(n^{-\frac{\alpha(\alpha + 2\varepsilon)}{2(\alpha+2)}})\\
-= & O(n^{-\varepsilon}).\\
-\end{array}
-\end{equation*}
-
-此时$k$-激活路由时间以$1-O(n^{-\varepsilon})$的概率至少为$\Omega(n^{\frac{1-\varepsilon}{\alpha+2}})$。
-通过设置$\varepsilon = 0$然后选取合适的常数$c$，可以得到有关$k$-激活路由时间期望的结论，这里不再给出证明。
-
-当$ \alpha >2$时，我们可以像上面一样证明对于$ \alpha >2$，
-$$\Pr(\forall~0 \leq i < cn^{\frac{\alpha-2\varepsilon}{2(\alpha+2)}},
-d_{i-1}-d_{i}\leq n^{\frac{1 + \varepsilon}{\alpha+2}}) \geq 1-O(n^{-\varepsilon}).$$
-我们可以说以很高的概率$1-O(n^{-\varepsilon})$，$k$-激活路由需要至少$cn^{\frac{\alpha-2\varepsilon}{2(\alpha+2)}}$步才能到达目标$t$。
-用类似的证明方法可以得到期望的结论。
-
-有关$k$-激活路由时间的下界对于分散式的路由选择算法依然成立，这里本文提供了对于$\alpha = 2$情况的证明。
-
-令$\mathcal{A}$为所有的确定性分散式路由算法的集合，$\mathcal{G}$为所有可能的基于$\alpha = 2$的Kleinberg小世界网络的集合，
-$\pi$是生成的Kleinberg小世界网络在$\mathcal{G}$在上的分布。
-进一步定义$T(A,G)$为分散式路由算法$A\in \mathcal{A}$在小世界网络$G\in \mathcal{G}$上的$k$-激活路由时间。
-因为随机算法是在确定性算法上的一个分布，我们只需要证明对于任意的在确定性算法集合$\mathcal{A}$上的分布$\mu$，
-\begin{equation}\label{eq:randomized_alg1}
-\Pr_{G\sim \pi}(\mathbb{E}_{A\sim \mu}(T(A,G))=\Omega(n^{1/4}))=1-O(\frac{1}{\log{n}}).
-\end{equation} 
-这里的概率是相对于$G$遵从的分布$\pi$，期望$\mathbb{E}_{A\sim \mu}(T(A,G)$是对于随机算法$A$遵从的分布$\mu$。
-
-从前面的证明可以得出
-$$
-\forall~A\in \mathcal{A},~\Pr_{G\sim \pi}(T(A,G)=\Omega(n^{1/4}))=1-O(\frac{1}{\log{n}}).
-$$
-因此存在不依赖于算法$A$的常数 $c_1,c_2>0$，有 
-$$
-\forall~A\in \mathcal{A},~\Pr_{G\sim \pi}(T(A,G)\geq c_1n^{1/4})\geq 1-\frac{c_2}{\log{n}}. 
-$$
-由于这个不等式对于任意的 $A\in \mathcal{A}$都成立，那么对于$\mathcal{A}$上的分布$\mu$
-\begin{equation}\label{eq:randomized_alg3}
-\Pr_{G\sim \pi\atop A\sim \mu}(T(A,G)\geq c_1n^{1/4})\geq 1-\frac{c_2}{\log{n}}. 
-\end{equation}
-再观察等式
-\begin{equation}\label{eq:randomized_alg2}
-\Pr_{G\sim \pi}(\mathbb{E}_{A\sim \mu}(T(A,G))\geq \frac{c_1}{2}n^{1/4})\geq 1-\frac{3c_2}{\log{n}},
-\end{equation}
-这是等式(\ref{eq:randomized_alg1})的等价版本。 
-下面用反证法证明，假设等式(\ref{eq:randomized_alg2})不成立，那么
-$$
-\Pr_{G\sim \pi}(\mathbb{E}_{A\sim \mu}(T(A,G))< \frac{c_1}{2}n^{1/4})\geq \frac{3c_2}{\log{n}}.
-$$
-令$\mathcal{G}_1\subseteq \mathcal{G}$ 为满足 $\mathbb{E}_{A\sim \mu}(T(A,G))< \frac{c_1}{2}n^{1/4}$的所有小世界网络$G$的集合，
-于是可以得到 $\Pr_{G\sim \pi}(G\in \mathcal{G}_1)\geq \frac{3c_2}{\log{n}}$。
-对于任意固定的小世界网络 $G\in \mathcal{G}_1$，由马尔可夫不等式
-（Markov's inequality~$\Pr(|X|\geq a) \leq \frac{E(|X|)}{a}$）可得
-$$\forall~G\in \mathcal{G}_1,\Pr_{A\sim\mu}(T(A,G)\geq c_1n^{1/4})\leq \frac{\mathbb{E}_{A\sim\mu}(T(A,G))}{c_1n^{1/4}}<\frac{1}{2}.$$
-因此对于任意的$\mathcal{G}_1$中的元素$G$，$\Pr_{A\sim\mu}(T(A,G)< c_1n^{1/4})\geq 1/2$ 都成立，而 $\mathcal{G}_1$的元素出现的概率至少为$\frac{1}{2}$。
-$$\Pr_{A\sim\mu\atop G\sim \pi}(T(A,G)< c_1n^{1/4})\geq \frac{1}{2}\cdot \frac{3c_2}{\log{n}}=\frac{1.5c_2}{\log{n}},$$
-这与不等式(\ref{eq:randomized_alg3})相矛盾，假设不成立，
-等式(\ref{eq:randomized_alg2})和等式(\ref{eq:randomized_alg1})成立。
-因此在$\alpha=2$时，对于任意的随机路由算法$A\sim \mu$，期望的$k$-激活路由时间均有$\Omega(n^{1/4})$的下界。
-\end{proof}
+\subsection{实验算法}
+我们测试了本文提出的\textsf{Galg-L}和\textsf{Galg-L}算法，
+比较了\textsf{Galg-U}和\textsf{Galg-L}和其他算法在有$\varepsilon$-次模逼近节点图中的表现。
+因为最终$\varepsilon$-次模逼近函数的次模上界和下界是线性函数，
+所以\textsf{Galg-U}和\textsf{Galg-L}使用TIM算法作为贪心算法，可以称为\textsf{TIM-U}和\textsf{TIM-L}。
 
 
+\begin{itemize}
+\item {\sf TIM-U, TIM-L:}
+Tang等人\cite{tang2014newrrset}提出了基于逆向可达集合的{\sf TIM$^+$}算法。
+但是{\sf TIM$^+$}不可以直接应用到一般的带有$\varepsilon$-次模逼近节点的图上。
+我们把所有的$\varepsilon$-次模逼近阈值函数替换为他们的上届，然后运行{\sf TIM$^+$}算法产生种子集合。
+我们称之为{\sf TIM-U}，也是第四章提出的算法\ref{alg:Galg_L}，算法可产生有近似比保证的输出。
+\item {\sf Greedy:} 简单粗暴的在图上根据贪心策略，迭代过程中每一轮选择边际影响力提升最大的节点加入种子集合。
+在有$\varepsilon$-次模逼近节点的图中算法没有理论保证，但是通常情况下贪心算法在实际网络效果不错。
+\item {\sf High-degree:} {\sf High-degree}计算每个节点的度（degree），然后根据度的降序输出前$k$个节点作为种子节点。
+\item {\sf PageRank:} PageRank在度量节点的重要程度时被广泛运用，PageRank的思想是重要的节点会指向重要的节点。
+在论文中，边$e=(u,v)$的传递概率被定义为$1/d(u)$，重启概率被设置为$0.15$。
+我们用幂方法（power method）计算每个节点的PageRank值，然后输出PageRank值比较高的$k$个节点。
+\item {\sf Random:} {\sf Random}随机的输出$k$个节点作为种子。
+\end{itemize}
 
-\section{讨论和扩展}
-用上一节的方法，可以得到$k$-激活路由相同的下界。
-为了保证$k$-激活路由能够找到目标，需要设置Kleinberg小世界网络的参数为$p = q = k$，
-同时种子节点的个数为$k$。
-因为结果和$2$-$k$-激活路由一样，这里就不在列出定理。
+\subsection{实验方法}
+
+数据集提供了网络的结构，我们假设每个节点都有线性的阈值函数。
+然后在每次实验中，随机的选取一些入度大于$2$的节点，然后把这些节点的阈值函数变成$\varepsilon$-次模逼近函数，\easso 或者 \easst。
+然后调节不同的$\varepsilon$-次模逼近节点个数，$\varepsilon$值的大小，不同的$\varepsilon$-次模逼近函数，然后比较实验结果。
+由于贪心算法的运行速度很慢，所以贪心算法的实验只在{\em NetHEPT}上测试。
 
 
-接下来本文把结果扩展到每一步允许激活多个（$m$个）节点的$k$-激活路由。
-当$m=1$时，这正是我们前一节在定理\ref{thm:routing}讨论的$k$-激活路由。
-当不限制$m$的大小时，$k$-激活路由就演变为$k$-激活传播。
-$m$可以被看作是连结$k$-激活路由和$k$-激活传播的变量，
-本文尝试去探索多大的$m$可以把$k$-激活路由的时间拉低到$k$-激活路由的水平。
+\section{实验结果}
+
+
+\subsection{{\em NetHEPT}上实验结果}
+第一组实验在{\em NetHEPT}网络上测试，主要是为了对比{\sf TIM-U, TIM-L}算法和{\sf Greedy}算法的表现。
+{\sf TIM-U, TIM-L}有理论的近似比保证，但是在图中有大量的$\varepsilon$-次模逼近算法时近似比会很差。
+与此相反，尽管影响力函数$\sigma(\cdot)$不是次模函数，
+粗暴的根据影响力函数选择边际影响力最大的节点假如种子集合往往能在实际中取得不错的结果。
+图\ref{fig:NetHEPT_comp}展示了不同实验设定下每个算法输出种子集合的影响力大小，$1$到$100$种子的结果都被展示了。
+图\ref{fig:hept_3000_comp}和图\ref{fig:hept_10000_comp}是有$3000$个\easso 节点的{\em NetHEPT}的测试结果。
+可以观察到{\sf TIM-U, TIM-L}比{\sf Greedy}略好一些，不管是在$3000$个还是$10000$个$\varepsilon$-次模逼近节点的图中。
+实际上\easso 函数是超模函数，{\sf TIM-U, TIM-L}的表现应该比较差。
+{\sf TIM-U, TIM-L}甚至在图中有许多超模节点的图中也打败了{\sf Greedy}算法。
+
+\begin{figure}[h]
+\centering
+	\subfigure[$3000$ \easso 节点]
+	{
+		\label{fig:hept_3000_comp}
+		\includegraphics[width=0.425\textwidth]{hept_3000_comp.png}
+	}
+    \subfigure[$10000$ \easso 节点]
+	{
+		\label{fig:hept_10000_comp}
+		\includegraphics[width=0.425\textwidth]{hept_10000_comp.png}
+	}
+    \subfigure[$3000$ \easst 节点]
+	{
+		\label{fig:hept_3000_lt_comp}
+		\includegraphics[width=0.425\textwidth]{hept_3000_lt_comp.png}
+	}
+    \subfigure[$10000$ \easst 节点]
+	{
+		\label{fig:hept_10000_lt_comp}
+		\includegraphics[width=0.425\textwidth]{hept_10000_lt_comp.png}
+	}
+	
+	\caption{{\em NetHEPT}中$\varepsilon=0.2$的结果}
+	\label{fig:NetHEPT_comp}
+\end{figure}
+
+
+注意到{\sf TIM-U, TIM-L}和{\sf Greedy}算法在任何设置下都明显打败了其他所有的基准算法。
+当种子节点个数$k=100$时，{\sf TIM-U}算法的效果比{\sf PageRank}算法要好$6.1\%$，比{\sf High-degree}要好$27.2\%$。
+当在有\easst 节点的图中测试时，图\ref{fig:hept_3000_lt_comp}和图\ref{fig:hept_10000_lt_comp}
+中可以看出{\sf TIM-U, TIM-L}算法和{\sf Greedy}算法的表现仍然大幅领先其他算法。
+在有\easst 节点的图中，影响力算法的表现比有\easso 节点的图中表现要好一些，这也跟我们期望的一致：
+超模函数在$\varepsilon$-次模函数中是最难优化的一类。
+因为超模函数和次模函数是相反的概念，完全背离了贪心算法的策略。
+
+
+另一件值得注意的事是{\sf TIM-U, TIM-L}算法可以在几秒内产生{\em NetHEPT}的种子节点，
+但是简单的贪心算法{\sf Greedy}需要跑数周才能输出种子集合，即使是在$24$线程加速的情况下。
+图中有非次模节点时，{\sf Greedy}不能使用任何的次模策略进行加速。
+但是实验中次模上下届是线性函数，通过逆向可达集合{\sf TIM$^+$}算法极大的缩短了算法运行时间。
+我们这里选测线性阈值函数的原因也是为了保证{\sf TIM$^+$}算法可以被应用。
+由于{\sf TIM-U, TIM-L}算法的效果基本和{\sf Greedy}算法一致而运行时间又很短，
+后文中不再用较大的网络中测试{\sf Greedy}算法的效果。
+
+
+\subsection{{\em Flixster}上实验结果}
+
+接下来在{\em Flixster}上测试算法效果。
+图\ref{fig:Flixster_2}给出了在{\em Flixster}网络中，
+包含$\varepsilon=0.2$的$\varepsilon$-次模逼近节点情况下影响力最大化算法的效果。
+然后又测试了$\varepsilon=0.4$的设置下影响力最大化算法，结果在图\ref{fig:Flixster_4}中。
+观察到{\sf TIM-U, TIM-L}算法在任何设置下都比基准的启发式算法要好很多。
+跟{\sf PageRank}算法对比，{\sf TIM-U, TIM-L}算法有在图\ref{fig:Flixster_2}的几组实验中分别有
+$30\%,46.3\%,26\%,29.7\%$的提升。
+{\sf TIM-U}和{\sf TIM-L}的表现很接近。
+
+
+\begin{figure}[h]
+\centering
+	\subfigure[$3000$ \easso 节点]
+	{
+		\label{fig:flixster_2_3000}
+		\includegraphics[width=0.425\textwidth]{flixster_2_3000.png}
+	}
+    \subfigure[$10000$ \easso 节点]
+	{
+		\label{fig:flixster_2_10000}
+		\includegraphics[width=0.425\textwidth]{flixster_2_10000.png}
+	}
+    \subfigure[$3000$ \easst 节点]
+	{
+		\label{fig:flixster_2_3000_lt}
+		\includegraphics[width=0.425\textwidth]{flixster_2_3000_lt.png}
+	}
+    \subfigure[$10000$ \easst 节点]
+	{
+		\label{fig:flixster_2_10000_lt}
+		\includegraphics[width=0.425\textwidth]{flixster_2_10000_lt.png}
+	}
+	\caption{{\em Flixster}中$\varepsilon=0.2$的结果}
+	\label{fig:Flixster_2}
+\end{figure}
+
+在{\em Flixster}上{\sf TIM-U}和{\sf TIM-L}算法领先基准算法的差距要比{\em NetHEPT}上更大。
+这些额外的差距可能是因为{\em Flixster}的网络结构更复杂。
+{\em Flixster}图中平均的度是 $5.95$，而在{\em NetHEPT}中只有$2.05$。
+在更稠密的网络中，节点可以通过更多的路径被激活，这使得影响力传播过程更为复杂，也传播的更远。
+基准算法仅仅关注网络的大体结构，如度、PageRank等，
+因而被{\sf TIM-U, TIM-L}这种专门针对影响力优化的算法击败。
+当图中有更多的$\varepsilon$-次模逼近节点时，{\sf TIM-U, TIM-L}的相对提升就越大。
+
+
+\begin{figure}[h]
+\centering
+	\subfigure[$3000$ \easso 节点]
+	{
+		\label{fig:flixster_4_3000}
+		\includegraphics[width=0.425\textwidth]{flixster_4_3000.png}
+	}
+    \subfigure[$10000$ \easso 节点]
+	{
+		\label{fig:flixster_4_10000}
+		\includegraphics[width=0.425\textwidth]{flixster_4_10000.png}
+	}
+    \subfigure[$3000$ \easst 节点]
+	{
+		\label{fig:flixster_4_3000_lt}
+		\includegraphics[width=0.425\textwidth]{flixster_4_3000_lt.png}
+	}
+    \subfigure[$10000$ \easst 节点]
+	{
+		\label{fig:flixster_4_10000_lt}
+		\includegraphics[width=0.425\textwidth]{flixster_4_10000_lt.png}
+	}
+	\caption{{\em Flixster}中$\varepsilon=0.2$的结果}
+	\label{fig:Flixster_4}
+\end{figure}
+
+当$\varepsilon$被设置为$0.4$时，也就是$\varepsilon$-次模逼近函数偏离次模更远的时候，
+图\ref{fig:Flixster_4}中展示出{\sf TIM-U}相对应于{\sf PageRank}算法分别有$37.6\%,74.2\%,28\%,35.6\%$的提升。
+注意到{\sf TIM-U}算法和{\sf PageRank}算法的差距随着$\varepsilon$的增加也增大了。
+总的来说在{\em Flixtser}数据集，{\sf TIM-U,TIM-L}相对于其他基准算法有很大优势，
+$\varepsilon$-次模逼近节点个数越多，$\varepsilon$越大，优势越大。
 
 
 
+\subsection{{\em DBLP}上实验结果}
 
-\begin{theorem}
-对于任意的分散式路由策略（算法），在$\alpha = 2$的有向Kleinberg小世界网络中，每一步可以允许激活$m$个节点的$k$-激活路由的路由时间有很高的概率$1-O(\frac{1}{\log n})$路由时间为
-$\Omega(\frac{n^{1/4}}{m})$，期望路由时间为$\Omega(\frac{n^{1/4}}{m})$。
-\end{theorem}
+接下来又测试了节点个数最多的{\em DBLP}网络。
+在{\em DBLP}网络上的测试结果如图\ref{fig:dblp_2_1}、图\ref{fig:dblp_2_2}和图\ref{fig:dblp_2_3}所示。
+我们分别选用了$10000$、$100000$和$200000$个节点作为$\varepsilon$-次模逼近节点来测试算法的效果。
+在{\em DBLP}中仍然可以观测到，{\sf TIM-U}和{\sf TIM-L}是表现最好的算法。
+在较大的网络中，{\sf PageRank}和{\sf High-degree}的表现也相当不错，
+仅仅在影响力大小上落后{\sf TIM-U,TIM-L}算法$2.6\%$。
+我们推测这是因为{\em DBLP}网络中有很多度很大的节点，这些节点对应着在学术圈很活跃的科学家和研究员。
+一旦这些节点被激活，影响力会有明显的提升，这也许是{\sf PageRank}和{\sf High-degree}表现亮眼的原因之一。
 
-\begin{proof}
-设$S$为当前已激活节点的集合。
-在下一步，通过$S$发出的有向边我们最多可以激活$m$个节点。
-但是考虑一步只允许激活一个节点的$k$-激活路由，如果一步只去激活一个节点，但是分成$m$步去激活。
-在每一步激活完成后，路由算法都会了解到新激活节点的有向边，也就是有更多的机会去激活其他节点。
-不难看出每步激活一个节点分成$m$步去激活要比一步激活$m$个节点的路由更有效率。
-因此如果每步激活一个节点的$k$-激活路由需要$T$个时间步骤来找到目标，
-每步允许激活$m$个节点的$k$-激活路由至少也需要$\frac{T}{m}$才能完成。
-所以每步允许激活$m$个节点的$k$-激活路由的路由时间为
-$\frac{T}{m} \cdot (1-O(\frac{1}{\log n})) = \Omega(\frac{T}{m})$。
-证毕。
-\end{proof}
 
-从上面这个定理可以得知为了得到路由时间为$n$的多项式对数级的$k$-激活路由，
-每一步允许激活的节点个数$m$需要很大，至少为$m = n^{\frac{1}{4}} / \log^{O(1)} n$。
+
+\begin{figure}[h]
+\centering
+	\subfigure[$10000$ \easso 节点]
+	{
+		\label{fig:dblp_2_10000}
+		\includegraphics[width=0.425\textwidth]{dblp_2_10000.png}
+	}
+    \subfigure[$10000$ \easst 节点]
+	{
+		\label{fig:dblp_2_10000_lt}
+		\includegraphics[width=0.425\textwidth]{dblp_2_10000_lt.png}
+	}
+	\caption{{\em DBLP}中$\varepsilon=0.2$的结果1}
+	\label{fig:dblp_2_1}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+    \subfigure[$100000$ \easso 节点]
+	{
+		\label{fig:dblp_2_100000}
+		\includegraphics[width=0.425\textwidth]{dblp_2_100000.png}
+	}
+    \subfigure[$100000$ \easst 节点]
+	{
+		\label{fig:dblp_2_100000_lt}
+		\includegraphics[width=0.425\textwidth]{dblp_2_100000_lt.png}
+	}
+	\caption{{\em DBLP}中$\varepsilon=0.2$的结果2}
+	\label{fig:dblp_2_2}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+	\subfigure[$200000$ \easso 节点]
+	{
+		\label{fig:dblp_2_200000}
+		\includegraphics[width=0.425\textwidth]{dblp_2_200000.png}
+	}
+	\subfigure[$200000$ \easst 节点]
+	{
+		\label{fig:dblp_2_200000_lt}
+		\includegraphics[width=0.425\textwidth]{dblp_2_200000_lt.png}
+	}
+	\caption{{\em DBLP}中$\varepsilon=0.2$的结果3}
+	\label{fig:dblp_2_3}
+\end{figure}
+
+{\em DBLP}网络中，即使加入了$200000$个$\varepsilon$-次模逼近节点，
+{\sf TIM-U}和{\sf TIM-L}是依然可以表现很好。
+这说明我们的算法不仅仅只是在$\varepsilon$-次模逼近节点较少时有较好的理论近似比保证。
+算法的设计思路虽然简单，通过转变为次模问题来优化，但是在真实的网络中，算法的表现很好，同时运行时间也可以接受，
+$\varepsilon$-次模逼近节点数量的增加没有让{\sf TIM-U}和{\sf TIM-L}表现很差。
+
 
 \section{本章小结}
+本章实现了第四章提出的近似算法\textsf{Galg-U}和\textsf{Galg-L}，
+并且在真实的社交网络数据{\em NetHEPT}、{\em Flixster}和{\em DBLP}上测试对比了算法和其他基准算法效果并分析了实验结果。
+6.1节主要介绍实验的基本配置，介绍了三个网络的基本信息和要对比的算法，然后介绍了如何进行对比。
+6.2节分别介绍了{\em NetHEPT}、{\em Flixster}和{\em DBLP}三个真实的网络数据上算法的表现，
+\textsf{Galg-U}和\textsf{Galg-L}的效果和\textsf{Greedy}持平，但是运行时间很短。
+而且在$\varepsilon$-次模逼近节点较多时算法依然能击败基准算法。
 
-本章提出了Kleinberg小世界网络中$k$-激活路由的概念，并对这一信息扩散现象进行了研究。
-首先给出最简单的$k$-激活路由的结论并给出了完整了理论证明，
-然后把结论扩展到$k$-激活路由，并且建立起$k$-激活路由和$k$-激活传播的关系，研究了每步允许激活$m$个节点的$k$-激活路由。
+
+
+
 
