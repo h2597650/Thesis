@@ -1,13 +1,46 @@
 
 \begin{abstract}
 
-影响力最大化问题是在社交网络中选择$k$个种子以
+随着互联网的普及，越来越多的人加入社交网络展示自己的生活。
+社交网络的及时性使得信息和谣言可以在网络上很快传播，在线社交网络的病毒式营销成为广告的新趋势。
+由此启发，许多工作研究了怎样最大化信息的传播，这也是所谓的{\it 影响力最大化}问题。
+深入理解信息在社会网络中的传播机制，以及如何控制疾病的传播、舆论的导向和营销策略的选择
+已经成为热点研究，影响力最大化问题和传播模型已成为许多领域涉及的重要内容。
 
-\keywords{社会影响力， 小世界网络， 近似算法， 路由}
+
+影响力最大化旨在从网络中选择$k$个种子节点，使得通过这$k$个种子节点通过传播模型产生的影响传播范围最大。
+这个问题已经被广泛研究但是大多的工作专注于次模的影响力传播模型。
+受现实的传播现象启发，本文探讨了非次模设定下的影响力最大化问题。
+在通用阈值模型框架下，本文定义了一类被次模上下界紧紧夹住的非次模阈值函数（{\it $\varepsilon$-次模逼近函数}），
+然后讨论图中有部分节点是$\varepsilon$-次模逼近阈值函数的情况。
+我们首先通过NP完全规约证明了不可近似性结论：
+即使$n$个节点的图中只有$n^{\gamma}$个$\varepsilon$-次模逼近节点，
+也不存在近似比为$1/n^{\frac{\gamma}{c}}$的算法，除非P = NP（$\gamma \in (0,1)$，$c$是依赖于$\varepsilon$的常数）。
+然后我们针对有$\ell$个$\varepsilon$-次模逼近节点的图设计了近似比为$(1-\varepsilon)^{\ell}$的算法。
+最后我们在一系列真实的社交网络数据上做了对比试验，实验结果表明我们提出的近似算法要比其他基准算法效果更好。
+
+此外本文研究了另一种阈值函数——$k$-激活函数，
+这种阈值函数对应着一个节点只有在其$k \geq 2$ 个邻居都被激活后自己才会被激活的传播模型。
+在Kleinberg的小世界网络模型中，强连接被认为是底层网格上确定的边，而弱连接指连接相距较远的节点之间的随机边。
+节点$u$和节点$v$通过一条弱连接相连的概率正比于$1/|uv|^\alpha$，
+此处$|uv|$是节点$u$和$v$之间的网格距离而$\alpha\ge 0$是小世界网络模型的参数。
+本文类比Kleinberg的分散式路由，提出了基于$k$-激活阈值函数的路由（简称{\it $k$-激活路由}），
+同时对Kleinberg小世界网络上$k$-激活路由时间进行了理论分析，
+求得$k$-激活路由的路由时间在所有$\alpha$范围内的$n$的多项式的下界。
+
+
+\keywords{社交网络， 社会影响力， 小世界网络， 影响力最大化， 路由}
 
 \end{abstract}
 
 \begin{englishabstract}
+
+With the prevalence of Internet, more and more people join social network to show their daily life.
+Information and rumors could spread fast in social networks because of its timeliness, and viral marketing on online social network becomes a new trend of advertising. 
+Motivated by this, plenty of research focuses on how to maximize the information propagation, which is called the influence maximization problem.
+Deeply understanding the propagation mechanisms of social networks as well as controlling disease spread,
+guiding public opinion and marketing strategy have become heated research topics.
+Many recent works that involve many fields focused on the influence maximization in social networks and information propagation model.
 
 Influence maximization is the problem of selecting $k$ nodes in a social network to maximize their influence spread.
 The problem has been extensively studied but most work focuses on the submodular influence diffusion models.
@@ -18,10 +51,23 @@ In particular, we study the general threshold model in which a fraction of nodes
 We first show a strong hardness result: there is no $1/n^{\frac{\gamma}{c}}$ approximation for influence maximization (unless P = NP)
 	for all networks with up to $n^{\gamma}$ $\varepsilon$-almost submodular nodes, where $\gamma$ in $(0,1)$ 
 	and $c$ is parameter depending on $\varepsilon$.
-We then provide constant approximation algorithms when the number of non-submodular nodes are constant.
+We then provide $(1-\varepsilon)^{\ell}$ approximation algorithms when the number of $\varepsilon$-almost submodular nodes is $\ell$.
 Finally, we conduct experiments on a number of real-world datasets, and the results demonstrate that our approximation algorithms
 	outperform other benchmark algorithms.
 
-\englishkeywords{Social Influence, Small World Network, Approximation Algorithm, Routing}
+Besides we study the threshold function ---- $k$-activation function, 
+which corresponds to a propagation model where each node is activated only
+after $k \ge 2$ neighbors of the node are activated.
+In Kleinberg's small-world network model, strong ties are modeled as deterministic edges in the
+underlying base grid and weak ties are modeled as random edges connecting remote nodes.
+The probability of connecting a node $u$ with node $v$ through a weak tie is proportional to
+$1/|uv|^\alpha$, where $|uv|$ is the grid distance between $u$ and $v$ and $\alpha\ge 0$ is the
+parameter of the model.
+We investigate a new propagation phenomenon closer to decentralized routing proposed by Kleinberg,
+which is called the routing under $k$-activation threshold function (or {\it $k$-activation routing}).
+Meanwhile the paper studies complex routing in Kleinberg's small-world networks and proves that
+routing time is lower bound by a polynomial in $n$ for all range of $\alpha$.
+
+\englishkeywords{Social Network, Social Influence, Small World Network, Influence Maximization, Routing}
 
 \end{englishabstract}
