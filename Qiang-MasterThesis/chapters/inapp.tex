@@ -218,13 +218,14 @@ $T_\varepsilon^n$一共包含$n\times(2^d-1) = n2^d-n$个节点。
 
 
 
-\subsection{基于Set Cover的不可近似性规约}
+\subsection{基于Set Cover的不可近似性归约}
 在本节基于概率与门，我们证明定理\ref{the:inapp}。
 前面一节基于二叉树级联得到的2-输入概率与门$T_\varepsilon$，我们构造了$n$个输入的概率与门$T_\varepsilon^n$。
 在接下来的证明中，我们说明如果$\varepsilon$-次模逼近网络中影响力最大化算法可以取得超过给定的近似比，那么Set Cover问题就可以在多项式时间内被解决。
 证明的整体思路是对于集合覆盖的一个实例，我们构造一个网络。网络中代表元素的点是$T_\varepsilon^n$的输入，
 然后把$T_\varepsilon^n$的输出点连接到数量很大的额外节点。
 因此，当$k$个集合可以覆盖住所有元素时，额外节点都会被激活。否则，$T_\varepsilon^n$的输出大概率不会被激活，额外节点都未被激活。
+
 \begin{proof}[定理\ref{the:inapp}证明]
 我们考虑一个基于集合覆盖构建出的图，在这个网络中影响力最大化算法的近似比不能超过给定的值，否则集合覆盖问题就将被解决，这就导致矛盾。
 令$e_1, e_2, \dots, e_n$为表示集合覆盖实例中$n$个元素的节点，$s_1, s_2, \dots, s_m$为表示$m$个集合的节点。
@@ -459,8 +460,8 @@ f_{v_1}, \dots,f_{v_n}\} \leftrightarrow \\
 但是放大之后$\underline{G}$的可能世界图变成了$\overline{G}$中的一个可能世界。
 
 期望的影响力$\sigma$可以通过对阈值积分计算：
-$$\sigma(S)=\int_{\mathbb{\theta}\in[0,1]^n} \mathcal{D}(\mathbb{\theta};f,S) \mbox{d}_{\mathbb{\theta}}$$
-$\mathcal{D}(\mathbb{\theta};f,S)$代表的是在可能世界图$(\mathbb{\theta};f)$中种子集合$S$确定的的影响力大小。
+$$\sigma(S)=\int_{\vec{\theta}\in[0,1]^n} \mathcal{D}(\vec{\theta};\vec{f},S) \mbox{d}_{\vec{\theta}}$$
+$\mathcal{D}(\vec{\theta};\vec{f},S)$代表的是在可能世界图$(\vec{\theta};\vec{f})$中种子集合$S$确定的的影响力大小。
 称图$\overline{G},\underline{G}$的影响力函数分别为$\overline{\sigma},\underline{\sigma}$。
 定义$\vec{\theta}\in[0,1]^n$为$n$个节点阈值组成的$n$维向量，
 $\vec{\theta}_e \in[0,1]^{c}$和$\vec{\theta}'\in[0,1]^{n-c}$分别是集合$V_e$和$V-V_e$的阈值向量。
