@@ -322,13 +322,13 @@ $\gamma$的取值范围是$(0,1)$，也就是对于任意比例的$\varepsilon$-
 		\State \Return $S$
 	\end{algorithmic} 
 \end{algorithm}
-在Algorithm\ref{alg:naive_greed}中，首先把所有的非次模节点加入种子集合，然后再依据贪心策略添加余下的$k - \ell$节点。
+在Algorithm~\ref{alg:naive_greed}中，首先把所有的非次模节点加入种子集合，然后再依据贪心策略添加余下的$k - \ell$节点。
 接下来分析算法的性能：
 
 
 \begin{theorem}\label{the:naive_greedy}
 给定一个$n$个节点的图$G$，其中除了$\ell < k$个节点的阈值函数是非次模函数，其余节点的阈值函数均是次模。
-在图$G$上的影响力最大化算法Algorithm\ref{alg:naive_greed}可以取得$(1-e^{-\frac{k-\ell}{k}})(1-\frac{1}{e})$的近似比。
+在图$G$上的影响力最大化算法Algorithm~\ref{alg:naive_greed}可以取得$(1-e^{-\frac{k-\ell}{k}})(1-\frac{1}{e})$的近似比。
 \end{theorem}
 \begin{proof}
 假设$S^*$是图$G$影响力最大化的最优种子集合，$V_e$是$\ell$个阈值函数非次模的节点集合，
@@ -422,8 +422,8 @@ Algorithm\ref{alg:naive_greed}有一定局限性，非次模节点个数不能�
 \begin{theorem}
 \label{thm:app_alg}
 给定通用阈值模型的一个图$G$，
-如果图中只有$c$个节点的阈值函数是$\varepsilon$-次模逼近而其余节点的阈值函数均是次模，
-那么算法{\bf Galg-L}可以输出近似比为$(1-\frac{1}{e})(1-\varepsilon)^c$的种子集合。
+如果图中只有$\ell$个节点的阈值函数是$\varepsilon$-次模逼近而其余节点的阈值函数均是次模，
+那么算法{\bf Galg-L}可以输出近似比为$(1-\frac{1}{e})(1-\varepsilon)^{\ell}$的种子集合。
 \end{theorem}
 \begin{proof}
 令$V_e$为$\varepsilon$-次模逼近节点的集合。
@@ -444,10 +444,10 @@ $$\{\theta_{v_1},\theta_{v_2},\dots,\theta_{v_n};f_{v_1},f_{v_2},\dots,f_{v_n}\}
 \begin{equation}
 \label{eq:possible_world}
 \begin{array}{ll}
-\{\theta_{v_1},\dots,\theta_{v_c},\theta_{v_{c+1}}\dots,\theta_{v_n};
+\{\theta_{v_1},\dots,\theta_{v_{\ell}},\theta_{v_{\ell+1}}\dots,\theta_{v_n};
 f_{v_1}, \dots,f_{v_n}\} \leftrightarrow \\
-\{\frac{\theta_{v_1}}{1-\varepsilon},\dots,\frac{\theta_{v_1}}{1-\varepsilon},\theta_{v_{c+1}}\dots,\theta_{v_n};
-\frac{f_{v_1}}{1-\varepsilon},\dots,\frac{f_{v_c}}{1-\varepsilon},f_{v_{c+1}},\dots,f_{v_n}\} \\
+\{\frac{\theta_{v_1}}{1-\varepsilon},\dots,\frac{\theta_{v_{\ell}}}{1-\varepsilon},\theta_{v_{\ell+1}}\dots,\theta_{v_n};
+\frac{f_{v_1}}{1-\varepsilon},\dots,\frac{f_{v_{\ell}}}{1-\varepsilon},f_{v_{\ell+1}},\dots,f_{v_n}\} \\
 \end{array}
 \end{equation}
 
@@ -464,7 +464,7 @@ $$\sigma(S)=\int_{\vec{\theta}\in[0,1]^n} \mathcal{D}(\vec{\theta};\vec{f},S) \m
 $\mathcal{D}(\vec{\theta};\vec{f},S)$代表的是在可能世界图$(\vec{\theta};\vec{f})$中种子集合$S$确定的的影响力大小。
 称图$\overline{G},\underline{G}$的影响力函数分别为$\overline{\sigma},\underline{\sigma}$。
 定义$\vec{\theta}\in[0,1]^n$为$n$个节点阈值组成的$n$维向量，
-$\vec{\theta}_e \in[0,1]^{c}$和$\vec{\theta}'\in[0,1]^{n-c}$分别是集合$V_e$和$V-V_e$的阈值向量。
+$\vec{\theta}_e \in[0,1]^{\ell}$和$\vec{\theta}'\in[0,1]^{n-\ell}$分别是集合$V_e$和$V-V_e$的阈值向量。
 类似的可以定义阈值函数向量，定义$V_e$和$V-V_e$的阈值函数向量分别为$\vec{f}_e,\vec{f}'$。
 一个可能世界图被简写为：
 $$\{\vec{\theta}_e,\vec{\theta}';\vec{f}_e,\vec{f}'\}$$
@@ -474,16 +474,16 @@ $$\{\vec{\theta}_e,\vec{\theta}';\vec{f}_e,\vec{f}'\}$$
 \begin{array}{ll}
 &\underline{\sigma}(S)\\
 =&\int_{\vec{\theta}\in[0,1]^n} \mathcal{D}(\vec{\theta};\vec{f},S) \mbox{d}_{\vec{\theta}} \\
-\geq&\int_{\vec{\theta}_e\in[0,1-\varepsilon]^c}\int_{\vec{\theta}'\in[0,1]^{n-c}} \mathcal{D}(\vec{\theta}_e,\vec{\theta}';\vec{f},S) \mbox{d}_{\vec{\theta}_e}\mbox{d}_{\vec{\theta}'} \\
-=&(1-\varepsilon)^c \int_{\frac{\vec{\theta}_e}{1-\varepsilon}\in[0,1]^c}\int_{\vec{\theta}'\in[0,1]^{n-c}} \mathcal{D}(\vec{\theta}_e,\vec{\theta}';\vec{f},S) \mbox{d}_{\frac{\vec{\theta}_e}{1-\varepsilon}}\mbox{d}_{\vec{\theta}'} \\
-=&(1-\varepsilon)^c \int_{\frac{\vec{\theta}_e}{1-\varepsilon}\in[0,1]^c}\int_{\vec{\theta}'\in[0,1]^{n-c}} \mathcal{D}(\frac{\vec{\theta}_e}{1-\varepsilon},\vec{\theta}';\frac{\vec{f}_e}{1-\varepsilon},\vec{f}',S) \mbox{d}_{\frac{\vec{\theta}_e}{1-\varepsilon}}\mbox{d}_{\vec{\theta}'} \\
-=&(1-\varepsilon)^c \int_{\vec{\theta}\in[0,1]^n} \mathcal{D}(\vec{\theta};\frac{\vec{f}_e}{1-\varepsilon},\vec{f}',S) \mbox{d}_{\vec{\theta}} \\
-=&(1-\varepsilon)^c \overline{\sigma}(S).\\
+\geq&\int_{\vec{\theta}_e\in[0,1-\varepsilon]^{\ell}}\int_{\vec{\theta}'\in[0,1]^{n-\ell}} \mathcal{D}(\vec{\theta}_e,\vec{\theta}';\vec{f},S) \mbox{d}_{\vec{\theta}_e}\mbox{d}_{\vec{\theta}'} \\
+=&(1-\varepsilon)^{\ell} \int_{\frac{\vec{\theta}_e}{1-\varepsilon}\in[0,1]^{\ell}}\int_{\vec{\theta}'\in[0,1]^{n-\ell}} \mathcal{D}(\vec{\theta}_e,\vec{\theta}';\vec{f},S) \mbox{d}_{\frac{\vec{\theta}_e}{1-\varepsilon}}\mbox{d}_{\vec{\theta}'} \\
+=&(1-\varepsilon)^{\ell} \int_{\frac{\vec{\theta}_e}{1-\varepsilon}\in[0,1]^{\ell}}\int_{\vec{\theta}'\in[0,1]^{n-\ell}} \mathcal{D}(\frac{\vec{\theta}_e}{1-\varepsilon},\vec{\theta}';\frac{\vec{f}_e}{1-\varepsilon},\vec{f}',S) \mbox{d}_{\frac{\vec{\theta}_e}{1-\varepsilon}}\mbox{d}_{\vec{\theta}'} \\
+=&(1-\varepsilon)^{\ell} \int_{\vec{\theta}\in[0,1]^n} \mathcal{D}(\vec{\theta};\frac{\vec{f}_e}{1-\varepsilon},\vec{f}',S) \mbox{d}_{\vec{\theta}} \\
+=&(1-\varepsilon)^{\ell} \overline{\sigma}(S).\\
 \end{array}
 \end{equation}
 不等式\ref{eq:sigma_geq}的第三个等号利用了$\underline{G}$和$\overline{G}$可能世界图的一一映射。
 因此，给定一个种子集合$S$，在图$\overline{G}$和图$\underline{G}$中对应的影响力函数满足关系：
-$$\underline{\sigma}(S) \geq (1-\varepsilon)^c \overline{\sigma}$$
+$$\underline{\sigma}(S) \geq (1-\varepsilon)^{\ell} \overline{\sigma}$$
 
 
 
@@ -493,15 +493,15 @@ $\overline{\sigma}, \sigma, \underline{\sigma}$的影响力最大化问题最优
 根据前文的不等式\ref{eq:sigma_geq}，推出
 $$\underline{\sigma}(\underline{S}^*)
 \geq \underline{\sigma}(\overline{S}^*)
-\geq (1-\varepsilon)^c \overline{\sigma}(\overline{S}^*)$$
+\geq (1-\varepsilon)^{\ell} \overline{\sigma}(\overline{S}^*)$$
 因此对于基于$\overline{\sigma}$的贪心算法$\mathcal{A}$的输出种子集合$S^{\mathcal{A}}$，有近似比如下：
 \begin{equation*}
 \begin{array}{ll}
 & \sigma(S^{\mathcal{A}}) \\
 \geq & \underline{\sigma}(S^{\mathcal{A}}) \\
 \geq & (1-\frac{1}{e})\underline{\sigma}(\underline{S}^*)\\
-\geq & (1-\frac{1}{e})(1-\varepsilon)^c \overline{\sigma}(\overline{S}^*) \\
-\geq &(1-\frac{1}{e})(1-\varepsilon)^c \sigma(S^*) \\
+\geq & (1-\frac{1}{e})(1-\varepsilon)^{\ell} \overline{\sigma}(\overline{S}^*) \\
+\geq &(1-\frac{1}{e})(1-\varepsilon)^{\ell} \sigma(S^*) \\
 \end{array}
 \end{equation*}
 至此定理证明完毕。
